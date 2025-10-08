@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Snake Master 3D</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #111;
+        font-family: "Arial", sans-serif;
+        overflow: hidden;
+        color: #fff;
+      }
+
+      #gameContainer {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+      }
+
+      #ui {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        color: #fff;
+        font-size: 20px;
+        font-weight: bold;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        z-index: 100;
+      }
+
+      #startScreen,
+      #gameOver {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        z-index: 200;
+      }
+
+      #startScreen h1 {
+        font-size: 48px;
+        margin-bottom: 10px;
+        color: #4caf50;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+      }
+
+      #startScreen p {
+        font-size: 18px;
+        margin-bottom: 30px;
+      }
+
+      #gameOver {
+        display: none;
+      }
+
+      #gameOver h2 {
+        color: #8b0000;
+      }
+
+      .button {
+        background-color: #4caf50;
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: background-color 0.3s;
+      }
+
+      .button:hover {
+        background-color: #45a049;
+      }
+
+      #instructions {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        color: #ccc;
+        font-size: 14px;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 15px;
+        border-radius: 10px;
+        max-width: 300px;
+        z-index: 100;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="gameContainer">
+      <div id="ui">
+        <div>Score: <span id="score">0</span></div>
+        <div>Length: <span id="length">3</span></div>
+      </div>
+
+      <div id="startScreen">
+        <h1>Snake Master 3D</h1>
+        <p>
+          Eat the insects to grow longer. Avoid the walls and your own tail!
+        </p>
+        <button id="startButton" class="button">Start Game</button>
+      </div>
+
+      <div id="gameOver">
+        <h2>Game Over!</h2>
+        <p>Final Score: <span id="finalScore">0</span></p>
+        <button id="restartButton" class="button">Restart</button>
+      </div>
+
+      <div id="instructions">
+        <strong>Controls:</strong><br />
+        WASD or Arrow Keys - Move Snake<br />
+        <br />
+        Eat insects to grow and score points!<br />
+        Don't hit the fence or yourself!
+      </div>
+    </div>
+
+    <script>
+      // Game variables
+      let scene, camera, renderer;
+      let snake = [];
+      let direction = { x: 1, y: 0, z: 0 };
+      let food = null;
+      let gameRunning = false;
+      let score = 0;
+      let gameSpeed = 200;
+      let lastMoveTime = 0;
+      let ground,
+        fence = [];
+      let grassBlades = [];
+      let birds = [];
+
+      // Game settings
+      const GRID_SIZE = 20;
+      const SEGMENT_SIZE = 2.0; // Increased snake size
+      const FIELD_SIZE = 25; // Increased field size
+
+      // Initialize the game
+      function init() {
+        // Create scene
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87ceeb); // Sky blue background
+        scene.fog = new THREE.Fog(0x87ceeb, 100, 250);
+
+        // Create camera
+        const aspect = window.innerWidth / window.innerHeight;
+        const frustumSize = 80;
+        camera = new THREE.OrthographicCamera(
+          (frustumSize * aspect) / -2,
+          (frustumSize * aspect) / 2,
+          frustumSize / 2,
+          frustumSize / -2,
+          0.1,
+          1000
+        );
+        camera.position.set(0, 50, 0); // Position directly above
+        camera.lookAt(0, 0, 0);
+
+        // Create renderer
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document
+          .getElementById("gameContainer")
+          .appendChild(renderer.domElement);
+
+        // Add lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.width = 2048;
+        directionalLight.shadow.mapSize.height = 2048;
+        scene.add(directionalLight);
+
+        // Create environment
+        createSun();
+        createGround();
+        createGrass();
+        createFence();
+        createForest();
+        createBirds();
+
+        // Create initial snake
+        createSnake();
+
+        // Create food
+        createFood();
+
+        // Add event listeners
+        document.addEventListener("keydown", onKeyPress);
+        window.addEventListener("resize", onWindowResize);
+        document
+          .getElementById("startButton")
+          .addEventListener("click", startGame);
+        document
+          .getElementById("restartButton")
+          .addEventListener("click", () => restartGame());
+
+        // Start game loop
+        animate();
+      }
+
+      function createSun() {
+        const sunGeometry = new THREE.SphereGeometry(20, 32, 32);
+        const sunMaterial = new THREE.MeshBasicMaterial({
+          color: 0xffd700,
+          fog: false,
+        });
+        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+        sun.position.set(-200, 150, -300);
+        scene.add(sun);
+
+        // Update directional light to match sun
+        const directionalLight = scene.children.find(
+          (obj) => obj.isDirectionalLight
+        );
+        if (directionalLight) {
+          directionalLight.position.set(-200, 150, -300);
+          directionalLight.target.position.set(0, 0, 0);
+        }
+      }
+
+      function startGame() {
+        gameRunning = true;
+        document.getElementById("startScreen").style.display = "none";
+        restartGame(true); // Reset without clearing snake immediately
+      }
+
+      function createGround() {
+        // Create outer sand ground
+        const sandGeometry = new THREE.PlaneGeometry(
+          (FIELD_SIZE + 10) * 2,
+          (FIELD_SIZE + 10) * 2,
+          32,
+          32
+        );
+        const sandMaterial = new THREE.MeshLambertMaterial({
+          color: 0xc2b280, // Sand color
+        });
+        const sandGround = new THREE.Mesh(sandGeometry, sandMaterial);
+        sandGround.rotation.x = -Math.PI / 2;
+        sandGround.receiveShadow = true;
+        scene.add(sandGround);
+
+        // Create inner garden ground
+        const gardenGeometry = new THREE.PlaneGeometry(
+          FIELD_SIZE * 2,
+          FIELD_SIZE * 2,
+          32,
+          32
+        );
+        const gardenMaterial = new THREE.MeshLambertMaterial({
+          color: 0x228b22, // Green garden color
+        });
+        ground = new THREE.Mesh(gardenGeometry, gardenMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = 0.1; // Place it slightly above the sand
+        ground.receiveShadow = true;
+        scene.add(ground);
+      }
+
+      function createGrass() {
+        const grassGeometry = new THREE.CylinderGeometry(0.01, 0.02, 0.5, 4);
+        const grassMaterial = new THREE.MeshLambertMaterial({
+          color: 0x32cd32,
+        });
+
+        for (let i = 0; i < 400; i++) {
+          // More grass for bigger field
+          const grass = new THREE.Mesh(grassGeometry, grassMaterial);
+          grass.position.x = (Math.random() - 0.5) * FIELD_SIZE * 1.9;
+          grass.position.z = (Math.random() - 0.5) * FIELD_SIZE * 1.9;
+          grass.position.y = 0.25 + 0.1; // Adjust for raised garden
+          grass.rotation.y = Math.random() * Math.PI * 2;
+          grass.scale.y = 0.5 + Math.random() * 0.8;
+          grass.castShadow = true;
+          grassBlades.push(grass);
+          scene.add(grass);
+        }
+      }
+
+      function createFence() {
+        const fenceMaterial = new THREE.MeshLambertMaterial({
+          color: 0x8b4513,
+        });
+        const postSize = 0.2;
+
+        const createWall = (width, height, depth, x, y, z) => {
+          const wallGeometry = new THREE.BoxGeometry(width, height, depth);
+          const wall = new THREE.Mesh(wallGeometry, fenceMaterial);
+          wall.position.set(x, y, z);
+          wall.castShadow = true;
+          scene.add(wall);
+          fence.push(wall);
+        };
+
+        const fenceY = 1 + 0.1; // Adjust for raised garden
+        // Side walls (along Z axis)
+        createWall(
+          postSize,
+          2,
+          FIELD_SIZE * 2 + postSize,
+          -FIELD_SIZE,
+          fenceY,
+          0
+        );
+        createWall(
+          postSize,
+          2,
+          FIELD_SIZE * 2 + postSize,
+          FIELD_SIZE,
+          fenceY,
+          0
+        );
+        // Front/back walls (along X axis)
+        createWall(
+          FIELD_SIZE * 2 - postSize,
+          2,
+          postSize,
+          0,
+          fenceY,
+          -FIELD_SIZE
+        );
+        createWall(
+          FIELD_SIZE * 2 - postSize,
+          2,
+          postSize,
+          0,
+          fenceY,
+          FIELD_SIZE
+        );
+      }
+
+      function createTree(x, z) {
+        const tree = new THREE.Group();
+
+        const trunkHeight = Math.random() * 4 + 4;
+        const trunkGeometry = new THREE.CylinderGeometry(
+          0.4,
+          0.6,
+          trunkHeight,
+          8
+        );
+        const trunkMaterial = new THREE.MeshLambertMaterial({
+          color: 0x8b4513,
+        });
+        const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+        trunk.position.y = trunkHeight / 2;
+        trunk.castShadow = true;
+        tree.add(trunk);
+
+        const leavesHeight = Math.random() * 4 + 4;
+        const leavesGeometry = new THREE.ConeGeometry(2.5, leavesHeight, 8);
+        const leavesMaterial = new THREE.MeshLambertMaterial({
+          color: 0x006400,
+        });
+        const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
+        leaves.position.y = trunkHeight + leavesHeight / 2 - 1;
+        leaves.castShadow = true;
+        tree.add(leaves);
+
+        tree.position.set(x, 0, z);
+        scene.add(tree);
+        return tree;
+      }
+
+      function createForest() {
+        const treeCount = 20;
+        const spacing = (FIELD_SIZE * 2) / treeCount;
+        for (let i = 0; i < treeCount; i++) {
+          // Left side
+          createTree(
+            -FIELD_SIZE - 5,
+            -FIELD_SIZE + i * spacing + (Math.random() - 0.5) * 5
+          );
+          // Right side
+          createTree(
+            FIELD_SIZE + 5,
+            -FIELD_SIZE + i * spacing + (Math.random() - 0.5) * 5
+          );
+        }
+      }
+
+      function createBird() {
+        const bird = new THREE.Group();
+
+        const bodyGeometry = new THREE.BoxGeometry(0.5, 0.5, 1.5);
+        const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x555555 });
+        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        bird.add(body);
+
+        const wingGeometry = new THREE.BoxGeometry(2, 0.1, 0.8);
+        const wingMaterial = new THREE.MeshLambertMaterial({ color: 0x666666 });
+
+        const leftWing = new THREE.Mesh(wingGeometry, wingMaterial);
+        leftWing.position.set(-1, 0, 0);
+        bird.add(leftWing);
+
+        const rightWing = new THREE.Mesh(wingGeometry, wingMaterial);
+        rightWing.position.set(1, 0, 0);
+        bird.add(rightWing);
+
+        bird.userData = {
+          leftWing: leftWing,
+          rightWing: rightWing,
+          flapSpeed: Math.random() * 0.1 + 0.1,
+          flapAngle: 0,
+          velocity: new THREE.Vector3(0.5, 0, Math.random() * 0.2 - 0.1),
+        };
+
+        bird.position.set(
+          -200,
+          50 + Math.random() * 20,
+          Math.random() * 100 - 50
+        );
+
+        birds.push(bird);
+        scene.add(bird);
+      }
+
+      function createBirds() {
+        for (let i = 0; i < 5; i++) {
+          createBird();
+        }
+      }
+
+      function createSnake() {
+        snake.forEach((segment) => scene.remove(segment));
+        snake = [];
+        // Create snake head
+        const headGeometry = new THREE.SphereGeometry(
+          SEGMENT_SIZE * 0.6,
+          16,
+          16
+        );
+        const headMaterial = new THREE.MeshLambertMaterial({ color: 0x228b22 });
+        const head = new THREE.Mesh(headGeometry, headMaterial);
+        head.position.set(0, SEGMENT_SIZE * 0.6 + 0.1, 0);
+        head.castShadow = true;
+
+        // Add eyes to head
+        const eyeGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+        const eyeMaterial = new THREE.MeshLambertMaterial({ color: 0xff0000 });
+
+        const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+        leftEye.position.set(-0.2, 0.2, 0.4);
+        head.add(leftEye);
+
+        const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+        rightEye.position.set(0.2, 0.2, 0.4);
+        head.add(rightEye);
+
+        snake.push(head);
+        scene.add(head);
+
+        // Create initial body segments
+        for (let i = 1; i < 3; i++) {
+          const segmentGeometry = new THREE.SphereGeometry(
+            SEGMENT_SIZE * 0.5,
+            12,
+            12
+          );
+          const segmentMaterial = new THREE.MeshLambertMaterial({
+            color: 0x32cd32,
+          });
+          const segment = new THREE.Mesh(segmentGeometry, segmentMaterial);
+          segment.position.set(-i * SEGMENT_SIZE, SEGMENT_SIZE * 0.5 + 0.1, 0);
+          segment.castShadow = true;
+
+          snake.push(segment);
+          scene.add(segment);
+        }
+      }
+
+      function createFood() {
+        if (food) {
+          scene.remove(food);
+        }
+
+        const insectGroup = new THREE.Group();
+
+        const bodyGeometry = new THREE.CylinderGeometry(0.15, 0.2, 0.8, 8);
+        const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
+        const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+        body.castShadow = true;
+        insectGroup.add(body);
+
+        const headGeometry = new THREE.SphereGeometry(0.2, 8, 8);
+        const headMaterial = new THREE.MeshLambertMaterial({ color: 0x654321 });
+        const head = new THREE.Mesh(headGeometry, headMaterial);
+        head.position.y = 0.5;
+        head.castShadow = true;
+        insectGroup.add(head);
+
+        const eyeGeometry = new THREE.SphereGeometry(0.05, 6, 6);
+        const eyeMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
+
+        const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+        leftEye.position.set(-0.1, 0.1, 0.15);
+        head.add(leftEye);
+
+        const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+        rightEye.position.set(0.1, 0.1, 0.15);
+        head.add(rightEye);
+
+        do {
+          insectGroup.position.x =
+            Math.floor(Math.random() * (FIELD_SIZE * 2 - 2)) - (FIELD_SIZE - 1);
+          insectGroup.position.z =
+            Math.floor(Math.random() * (FIELD_SIZE * 2 - 2)) - (FIELD_SIZE - 1);
+        } while (
+          isPositionOccupied(insectGroup.position.x, insectGroup.position.z)
+        );
+
+        const insectScale = 2.5;
+        insectGroup.rotation.x = -Math.PI / 2; // Lay insect flat
+        insectGroup.scale.set(insectScale, insectScale, insectScale);
+        insectGroup.position.y = 0.2 * insectScale + 0.1; // Adjust y position for rotation
+
+        insectGroup.userData = {
+          originalY: insectGroup.position.y,
+          time: 0,
+        };
+
+        food = insectGroup;
+        scene.add(food);
+      }
+
+      function isPositionOccupied(x, z) {
+        for (let segment of snake) {
+          if (
+            segment.position.distanceTo(
+              new THREE.Vector3(x, segment.position.y, z)
+            ) < SEGMENT_SIZE
+          ) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      function moveSnake() {
+        if (!gameRunning) return;
+
+        const head = snake[0];
+        const newPos = head.position
+          .clone()
+          .add(
+            new THREE.Vector3(direction.x, 0, direction.z).multiplyScalar(
+              SEGMENT_SIZE
+            )
+          );
+
+        if (
+          Math.abs(newPos.x) >= FIELD_SIZE ||
+          Math.abs(newPos.z) >= FIELD_SIZE
+        ) {
+          gameOver();
+          return;
+        }
+
+        for (let i = 1; i < snake.length; i++) {
+          if (
+            head.position.distanceTo(snake[i].position) <
+            SEGMENT_SIZE * 0.5
+          ) {
+            gameOver();
+            return;
+          }
+        }
+
+        for (let i = snake.length - 1; i > 0; i--) {
+          snake[i].position.copy(snake[i - 1].position);
+        }
+
+        head.position.copy(newPos);
+
+        if (direction.x !== 0) {
+          head.rotation.y = direction.x > 0 ? 0 : Math.PI;
+        } else if (direction.z !== 0) {
+          head.rotation.y = direction.z > 0 ? Math.PI / 2 : -Math.PI / 2;
+        }
+
+        if (food && head.position.distanceTo(food.position) < SEGMENT_SIZE) {
+          eatFood();
+        }
+      }
+
+      function eatFood() {
+        score += 10;
+        document.getElementById("score").textContent = score;
+
+        const tail = snake[snake.length - 1];
+        const segmentGeometry = new THREE.SphereGeometry(
+          SEGMENT_SIZE * 0.5,
+          12,
+          12
+        );
+        const segmentMaterial = new THREE.MeshLambertMaterial({
+          color: 0x32cd32,
+        });
+        const newSegment = new THREE.Mesh(segmentGeometry, segmentMaterial);
+        newSegment.position.copy(tail.position);
+        newSegment.castShadow = true;
+
+        snake.push(newSegment);
+        scene.add(newSegment);
+
+        document.getElementById("length").textContent = snake.length;
+
+        createFood();
+
+        gameSpeed = Math.max(gameSpeed - 5, 80);
+      }
+
+      function onKeyPress(event) {
+        if (!gameRunning) return;
+
+        const key = event.key.toLowerCase();
+
+        switch (key) {
+          case "w":
+          case "arrowup":
+            if (direction.z === 0) direction = { x: 0, y: 0, z: -1 };
+            break;
+          case "s":
+          case "arrowdown":
+            if (direction.z === 0) direction = { x: 0, y: 0, z: 1 };
+            break;
+          case "a":
+          case "arrowleft":
+            if (direction.x === 0) direction = { x: -1, y: 0, z: 0 };
+            break;
+          case "d":
+          case "arrowright":
+            if (direction.x === 0) direction = { x: 1, y: 0, z: 0 };
+            break;
+        }
+      }
+
+      function gameOver() {
+        gameRunning = false;
+        document.getElementById("finalScore").textContent = score;
+        document.getElementById("gameOver").style.display = "block";
+      }
+
+      function restartGame(isInitialStart = false) {
+        if (!isInitialStart) {
+          snake.forEach((segment) => scene.remove(segment));
+          if (food) scene.remove(food);
+          createSnake();
+          createFood();
+        }
+
+        gameRunning = true;
+        score = 0;
+        gameSpeed = 200;
+        direction = { x: 1, y: 0, z: 0 };
+
+        document.getElementById("score").textContent = "0";
+        document.getElementById("length").textContent = "3";
+        document.getElementById("gameOver").style.display = "none";
+        document.getElementById("startScreen").style.display = "none";
+      }
+
+      function animate(currentTime) {
+        requestAnimationFrame(animate);
+
+        if (gameRunning && currentTime - lastMoveTime > gameSpeed) {
+          moveSnake();
+          lastMoveTime = currentTime;
+        }
+
+        if (food && food.userData) {
+          food.userData.time += 0.05;
+          food.position.y =
+            food.userData.originalY + Math.sin(food.userData.time) * 0.2;
+          food.rotation.y += 0.02;
+        }
+
+        // Animate birds
+        birds.forEach((bird) => {
+          bird.position.add(bird.userData.velocity);
+
+          // Flap wings
+          bird.userData.flapAngle += bird.userData.flapSpeed;
+          bird.userData.leftWing.rotation.z =
+            Math.sin(bird.userData.flapAngle) * 0.5;
+          bird.userData.rightWing.rotation.z =
+            -Math.sin(bird.userData.flapAngle) * 0.5;
+
+          // Reset bird position when it flies too far
+          if (bird.position.x > 200) {
+            bird.position.set(
+              -200,
+              50 + Math.random() * 20,
+              Math.random() * 100 - 50
+            );
+          }
+        });
+
+        renderer.render(scene, camera);
+      }
+
+      function onWindowResize() {
+        const aspect = window.innerWidth / window.innerHeight;
+        const frustumSize = 80;
+        camera.left = (frustumSize * aspect) / -2;
+        camera.right = (frustumSize * aspect) / 2;
+        camera.top = frustumSize / 2;
+        camera.bottom = frustumSize / -2;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      init();
+    </script>
+  </body>
+</html>

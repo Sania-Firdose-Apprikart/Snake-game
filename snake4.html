@@ -1,0 +1,2260 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"
+    />
+    <title>Snake Master - Enhanced Mobile</title>
+    <link rel="icon" href="data:," />
+    <style>
+      :root {
+        --bg: #2c3e50;
+        --panel: #34495ecc;
+        --accent: #8be04a;
+        --muted: #cbd5e1;
+        --glass: rgba(255, 255, 255, 0.1);
+        --border: rgba(255, 255, 255, 0.08);
+        --shadow: rgba(0, 0, 0, 0.4);
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: var(--bg);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+          sans-serif;
+        color: #e6eef6;
+        overflow: hidden;
+        touch-action: manipulation;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .video-container {
+        width: 100%;
+        max-width: 400px;
+        margin: 16px auto;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        background: #000;
+      }
+
+      .video-container video {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 14px;
+      }
+
+      /* Responsive video sizing */
+      @media (max-width: 480px) {
+        .video-container {
+          max-width: 100%;
+          margin: 12px 0;
+        }
+      }
+
+      #app {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        height: 100dvh; /* Dynamic viewport height for mobile */
+        position: relative;
+      }
+
+      /* Enhanced Header */
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        backdrop-filter: blur(20px);
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.05),
+          rgba(255, 255, 255, 0.02)
+        );
+        border-bottom: 1px solid var(--border);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        flex-shrink: 0;
+        z-index: 20;
+      }
+
+      .title {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #9ef05b, #39a938);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #083;
+        box-shadow: 0 6px 20px rgba(158, 240, 91, 0.3);
+        font-size: 18px;
+        animation: logoGlow 3s ease-in-out infinite alternate;
+      }
+
+      @keyframes logoGlow {
+        from {
+          box-shadow: 0 6px 20px rgba(158, 240, 91, 0.3);
+        }
+        to {
+          box-shadow: 0 6px 30px rgba(158, 240, 91, 0.6);
+        }
+      }
+
+      .title h1 {
+        font-size: 16px;
+        margin: 0;
+        font-weight: 700;
+        background: linear-gradient(135deg, #ffffff, #cbd5e1);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .title .subtitle {
+        font-size: 11px;
+        color: #9fb2c8;
+        margin-top: 2px;
+        opacity: 0.8;
+      }
+
+      /* Enhanced HUD */
+      .hud {
+        display: flex;
+        align-items: stretch; /* Changed from center */
+        justify-content: center;
+        gap: 10px;
+        padding: 10px 12px;
+        flex-wrap: wrap;
+      }
+
+      .panel {
+        /* background: var(--panel);
+              backdrop-filter: blur(10px); */
+        padding: 8px 12px;
+        border-radius: 12px;
+        min-width: 80px;
+        text-align: center;
+        border: 1px solid var(--border);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+        background-color: #399405fb;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .panel:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+      }
+
+      .panel .label {
+        font-size: 15px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        font-weight: 600;
+      }
+
+      .panel .value {
+        font-weight: 800;
+        font-size: 15px;
+        margin-top: 2px;
+        background: white;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      /* Enhanced Buttons */
+      .btn {
+        border: none;
+        padding: 10px 16px;
+        border-radius: 12px;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .btn::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.5s;
+      }
+
+      .btn:active::before {
+        left: 100%;
+      }
+
+      .hud .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 70px;
+      }
+
+      #restartBtn {
+        background: linear-gradient(135deg, #ff6b6b, #ff4757);
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+      }
+
+      #restartBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 25px rgba(255, 107, 107, 0.4);
+      }
+
+      #pauseBtn {
+        background: linear-gradient(135deg, #74b9ff, #0984e3);
+        box-shadow: 0 4px 15px rgba(116, 185, 255, 0.3);
+      }
+
+      #pauseBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 25px rgba(116, 185, 255, 0.4);
+      }
+
+      /* Enhanced Game Area */
+      #gameWrap {
+        flex: 1;
+        display: flex;
+        align-items: stretch;
+        justify-content: stretch;
+        padding: 0;
+        min-height: 0;
+        position: relative;
+        height: 100%;
+        width: 100%;
+      }
+
+      #canvasHolder {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: stretch;
+        justify-content: stretch;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 16px;
+        touch-action: none;
+      }
+
+      /* Enhanced Mobile Controls */
+      .controls {
+        position: absolute;
+        left: 16px;
+        bottom: 20px;
+        user-select: none;
+        z-index: 15;
+        opacity: 0.9;
+      }
+
+      .dpad {
+        display: grid;
+        grid-template-columns: repeat(3, 55px);
+        grid-template-rows: repeat(3, 55px);
+        gap: 6px;
+        filter: drop-shadow(0 4px 12px rgba(238, 231, 231, 0.4));
+      }
+
+      .dpad button {
+        width: 55px;
+        height: 55px;
+        border-radius: 15px;
+        border: none;
+        background: var(--glass);
+        backdrop-filter: blur(15px);
+        color: #fff;
+        font-size: 20px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 12px rgba(221, 8, 8, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .dpad button:active {
+        transform: scale(0.92) translateY(1px);
+        background: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4),
+          inset 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .dpad button.hidden {
+        visibility: hidden;
+      }
+
+      /* Enhanced Speed Controls */
+      .speed-controls {
+        position: absolute;
+        right: 16px;
+        bottom: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        z-index: 15;
+        opacity: 0.9;
+      }
+
+      .speed-btn {
+        padding: 12px 14px;
+        border-radius: 15px;
+        border: none;
+        background: var(--glass);
+        backdrop-filter: blur(15px);
+        color: #fff;
+        font-weight: 700;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        min-width: 65px;
+      }
+
+      .speed-btn:active {
+        transform: scale(0.95) translateY(1px);
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      /* Enhanced Modals */
+      .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        /* background: rgba(0, 0, 0, 0.8); */
+        /* backdrop-filter: blur(8px); */
+        z-index: 40;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .modal-backdrop.show {
+        display: block;
+        opacity: 1;
+      }
+
+      .modal {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 50;
+        background: white;
+        backdrop-filter: blur(20px);
+        padding: 32px;
+        border-radius: 24px;
+        min-width: 320px;
+        max-width: 90vw;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: none;
+        transform-origin: center;
+      }
+
+      .modal.show {
+        display: block;
+        animation: modalAppear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      @keyframes modalAppear {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.8);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
+        }
+      }
+
+      .modal h2 {
+        margin: 0 0 16px;
+        font-size: 28px;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--accent), #39a938);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .modal p {
+        margin: 12px 0 24px;
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 15px;
+      }
+
+      .game-over-image img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 16px;
+        margin: 12px 0;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 12px;
+      }
+
+      #goText {
+        color: black;
+        font-weight: bold;
+        font-size: 18px;
+        margin: 0;
+        text-align: left;
+        flex-grow: 1;
+      }
+
+      #goText .go-icon {
+        color: red;
+      }
+
+      .modal-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+      }
+
+      #gameOver .modal-buttons button {
+        min-width: 0;
+        flex-grow: 1;
+        flex-basis: 0;
+        padding: 16px 16px;
+      }
+
+      #gameOver .close-modal-btn {
+        position: relative;
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        padding: 0;
+        border-radius: 50%;
+        background-color: #818181;
+        color: white;
+        border: none;
+        font-size: 20px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        flex-shrink: 0;
+      }
+
+      #gameOver .close-modal-btn:hover {
+        background-color: #616161;
+      }
+
+      .modal button {
+        padding: 14px 24px;
+        border-radius: 16px;
+        border: none;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 15px;
+        min-width: 250px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn-primary {
+        background: #7b0fff;
+        color: #ffffff;
+        box-shadow: 0 6px 20px rgba(139, 224, 74, 0.3);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(139, 224, 74, 0.5);
+      }
+
+      .btn-secondary {
+        background: linear-gradient(135deg, #6c7293, #5a5d7a);
+        color: white;
+        box-shadow: 0 6px 20px rgba(108, 114, 147, 0.3);
+      }
+
+      .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(108, 114, 147, 0.4);
+      }
+
+      /* Game Over Effects */
+      .game-over-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+          circle,
+          rgba(255, 0, 0, 0.1),
+          rgba(0, 0, 0, 0.8)
+        );
+        display: none;
+        z-index: 35;
+        backdrop-filter: blur(4px);
+      }
+
+      .game-over-overlay.show {
+        display: block;
+        animation: gameOverFade 0.8s ease-in;
+      }
+
+      @keyframes gameOverFade {
+        0% {
+          opacity: 0;
+          background: radial-gradient(circle, transparent, transparent);
+        }
+        50% {
+          background: radial-gradient(
+            circle,
+            rgba(255, 50, 50, 0.2),
+            rgba(0, 0, 0, 0.4)
+          );
+        }
+        100% {
+          opacity: 1;
+          background: radial-gradient(
+            circle,
+            rgba(255, 0, 0, 0.1),
+            rgba(0, 0, 0, 0.8)
+          );
+        }
+      }
+
+      /* Enhanced Footer */
+      footer {
+        padding: 12px 16px;
+        text-align: center;
+        font-size: 11px;
+        color: #99b2c6;
+        background: linear-gradient(
+          180deg,
+          transparent,
+          rgba(255, 255, 255, 0.02)
+        );
+        flex-shrink: 0;
+        border-top: 1px solid var(--border);
+        backdrop-filter: blur(10px);
+      }
+
+      /* Performance Indicator */
+      .performance-indicator {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: var(--glass);
+        backdrop-filter: blur(10px);
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 10px;
+        color: var(--accent);
+        border: 1px solid var(--border);
+        z-index: 20;
+      }
+
+      @media (max-width: 768px) {
+        header {
+          padding: 10px 12px;
+        }
+        #gameWrap {
+          padding: 0;
+          height: 100%;
+        }
+        #canvasHolder {
+          border-radius: 0;
+          height: 100%;
+        }
+      }
+
+      .title h1 {
+        font-size: 14px;
+      }
+
+      .title .subtitle {
+        font-size: 10px;
+      }
+
+      .logo {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+      }
+
+      .panel {
+        min-width: 65px;
+        padding: 6px 10px;
+      }
+
+      .panel .value {
+        font-size: 16px;
+      }
+
+      .btn {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+
+      #gameWrap {
+        padding: 8px;
+      }
+
+      .modal {
+        padding: 24px;
+        min-width: 280px;
+      }
+
+      .modal h2 {
+        font-size: 24px;
+      }
+
+      .dpad {
+        grid-template-columns: repeat(3, 50px);
+        grid-template-rows: repeat(3, 50px);
+      }
+
+      .dpad button {
+        width: 50px;
+        height: 50px;
+        font-size: 18px;
+        @media (max-width: 480px) {
+          header {
+            padding: 8px 10px;
+          }
+          #gameWrap {
+            padding: 0;
+            height: 100%;
+          }
+          #canvasHolder {
+            border-radius: 0;
+            height: 100%;
+          }
+          font-size: 11px;
+          min-width: 60px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        header {
+          padding: 8px 10px;
+        }
+
+        .hud {
+          gap: 6px;
+        }
+
+        .dpad {
+          grid-template-columns: repeat(3, 45px);
+          grid-template-rows: repeat(3, 45px);
+          gap: 4px;
+        }
+
+        .dpad button {
+          width: 45px;
+          height: 45px;
+          font-size: 16px;
+          border-radius: 12px;
+        }
+
+        .controls {
+          left: 12px;
+          bottom: 16px;
+        }
+
+        .speed-controls {
+          right: 12px;
+          bottom: 16px;
+        }
+
+        .speed-btn {
+          padding: 8px 10px;
+          min-width: 55px;
+        }
+
+        .modal {
+          padding: 20px;
+          border-radius: 20px;
+        }
+
+        #gameWrap {
+          padding: 4px;
+        }
+
+        #canvasHolder {
+          border-radius: 12px;
+        }
+      }
+      .timer-panel {
+        background: linear-gradient(135deg, #06b6d4, #0891b2);
+        padding: 10px 16px;
+        border-radius: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-width: 90px;
+        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      .timer-panel .value {
+        font-weight: 800;
+        font-size: 18px;
+        color: white;
+      }
+      /* Landscape orientation optimizations */
+      @media (orientation: landscape) and (max-height: 600px) {
+        header {
+          padding: 6px 12px;
+        }
+
+        footer {
+          padding: 6px 12px;
+          font-size: 10px;
+        }
+
+        .logo {
+          width: 32px;
+          height: 32px;
+          font-size: 14px;
+        }
+
+        .title h1 {
+          font-size: 13px;
+        }
+
+        .panel .value {
+          font-size: 15px;
+        }
+
+        .controls {
+          bottom: 12px;
+        }
+
+        .speed-controls {
+          bottom: 12px;
+        }
+
+        .dpad {
+          grid-template-columns: repeat(3, 42px);
+          grid-template-rows: repeat(3, 42px);
+        }
+
+        .dpad button {
+          width: 42px;
+          height: 42px;
+          font-size: 14px;
+        }
+      }
+
+      /* Very small screens */
+      @media (max-width: 360px) {
+        .title {
+          gap: 8px;
+        }
+
+        .hud {
+          gap: 4px;
+        }
+
+        .panel {
+          min-width: 55px;
+          padding: 4px 8px;
+        }
+
+        .btn {
+          padding: 6px 10px;
+          font-size: 11px;
+        }
+
+        .dpad {
+          grid-template-columns: repeat(3, 40px);
+          grid-template-rows: repeat(3, 40px);
+        }
+
+        .dpad button {
+          width: 40px;
+          height: 40px;
+          font-size: 14px;
+        }
+      }
+
+      /* Dark mode enhancements */
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #2c3e50;
+          --panel: #34495ecc;
+          --accent: #8be04a;
+          --muted: #cbd5e1;
+          --glass: rgba(255, 255, 255, 0.1);
+          --border: rgba(255, 255, 255, 0.08);
+          --shadow: rgba(0, 0, 0, 0.4);
+        }
+      }
+
+      /* Reduce motion for accessibility */
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      /* Focus styles for accessibility */
+      button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      │ #helpButton {
+        background: black;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        padding: 0;
+      }
+      #helpButton > div {
+        background: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        color: black;
+        font-size: 20px;
+      }
+      /* Help Popup Styles */
+      .help-popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 99;
+        display: none;
+      }
+
+      .help-popup-overlay.show {
+        display: block;
+      }
+
+      .help-popup {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: white;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
+        z-index: 100;
+        display: none;
+        transform: translateY(100%);
+        transition: transform 0.3s ease-out;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+
+      .help-popup.show {
+        display: block;
+        transform: translateY(0);
+      }
+
+      .help-popup-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .help-popup-header h2 {
+        margin: 0;
+        color: black;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      #closeHelpPopup {
+        background: none;
+        border: none;
+        color: black;
+        font-size: 24px;
+        cursor: pointer;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background-color: #f0f0f0;
+      }
+
+      .swipe-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+        gap: 15px;
+      }
+
+      .swipe-direction {
+        background-color: #364556;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        aspect-ratio: 1;
+      }
+
+      .swipe-direction img {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 10px;
+        object-fit: contain;
+      }
+
+      .swipe-direction span {
+        color: white;
+        font-size: 14px;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <!-- <div class="title">
+          <div class="logo">🐍</div>
+          <div>
+            <h1>Snake Master </h1>
+            <div class="subtitle">Enhanced • Mobile Optimized</div>
+          </div>
+        </div> -->
+
+        <div class="hud">
+          <div class="panel">
+            <div class="label">
+              Score :<span id="score" class="value">0</span>
+            </div>
+            <div class="label">
+              Best :<span id="highscore" class="value">0</span>
+            </div>
+            <!-- <div id="highscore" class="value">0</div> -->
+          </div>
+          <!-- <div class="panel">
+
+          </div> -->
+          <button id="pauseBtn" class="btn">
+            <img src="/images/pause.svg" alt="" />
+          </button>
+          <button id="restartBtn" class="btn">
+            <img src="/images/autorenew.svg" alt="" />
+          </button>
+          <div class="timer-panel">
+            <div id="timer" class="value">00:00</div>
+          </div>
+        </div>
+      </header>
+
+      <div id="gameWrap">
+        <div id="canvasHolder">
+          <canvas id="glcanvas"></canvas>
+
+          <div
+            id="helpButton"
+            class="performance-indicator"
+            onclick="showHelpPopup()"
+          >
+            <div>!</div>
+          </div>
+          <!-- Game Over Overlay -->
+          <div class="game-over-overlay" id="gameOverOverlay"></div>
+
+          <!-- Mobile Controls -->
+          <div class="controls">
+            <div class="dpad" id="dpad">
+              <button data-dir="nw" class="hidden" aria-hidden="true"></button>
+              <button data-dir="up" aria-label="Move Up">▲</button>
+              <button data-dir="ne" class="hidden" aria-hidden="true"></button>
+
+              <button data-dir="left" aria-label="Move Left">◀</button>
+              <button
+                data-dir="center"
+                class="hidden"
+                aria-hidden="true"
+              ></button>
+              <button data-dir="right" aria-label="Move Right">▶</button>
+
+              <button data-dir="sw" class="hidden" aria-hidden="true"></button>
+              <button data-dir="down" aria-label="Move Down">▼</button>
+              <button data-dir="se" class="hidden" aria-hidden="true"></button>
+            </div>
+          </div>
+
+          <!-- Speed Controls -->
+          <div class="speed-controls">
+            <button id="speedUp" class="speed-btn" aria-label="Increase Speed">
+              ⚡+
+            </button>
+            <button
+              id="speedDown"
+              class="speed-btn"
+              aria-label="Decrease Speed"
+            >
+              ⚡−
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        🎮 Controls: Arrow keys, WASD, or touch D-pad • 🐛 Eat insects to grow •
+        ⚠️ Avoid walls and yourself
+      </footer>
+    </div>
+
+    <!-- Modal Backdrop -->
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+
+    <!-- Start Game Modal -->
+    <div class="modal show" id="startGame">
+      <!-- <h2>🐍 Snake Master</h2> -->
+
+      <div class="video-container">
+        <video
+          id="introVideo"
+          autoplay
+          loop
+          muted
+          playsinline
+          poster="/images/snakeThumbnail.png"
+        >
+          <source src="/assets/videos/snakeVideo.mp4" type="video/mp4" />
+          <source src="/assets/videos/snakeVideo.webm" type="video/webm" />
+          Your browser doesn't support video playback.
+        </video>
+      </div>
+      <!-- <p style="color: black">
+        Guide your snake to eat colorful insects and grow longer!<br />
+        🎯 Avoid hitting walls and yourself to achieve the highest score.
+      </p> -->
+      <div class="modal-buttons">
+        <button id="startBtn" class="btn-primary">Start the Game</button>
+      </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div class="modal" id="gameOver">
+      <!-- <h2>💥 Game Over!</h2> -->
+      <div class="modal-header">
+        <p id="goText">You hit the fence!</p>
+        <button id="closeGameOver" class="close-modal-btn">&times;</button>
+      </div>
+      <div class="game-over-image">
+        <img
+          id="gameOverHitWall"
+          src="images/hit-the-fence.png"
+          alt="Snake hitting a wall"
+          style="display: none"
+        />
+        <img
+          id="gameOverSelf"
+          src="images/ran-into-yourself.png"
+          alt="Snake ran into itself"
+          style="display: none"
+        />
+      </div>
+      <div
+        id="achievementText"
+        style="margin: 16px 0; font-weight: 600; color: var(--accent)"
+      ></div>
+      <div class="modal-buttons">
+        <button id="goMenu" class="btn-secondary">Back</button>
+        <button id="goRestart" class="btn-primary">Play again</button>
+      </div>
+    </div>
+
+    <!-- Help Popup -->
+    <div class="help-popup-overlay" id="helpPopupOverlay"></div>
+    <div class="help-popup" id="helpPopup">
+      <div class="help-popup-header">
+        <h2>How to Play</h2>
+        <button id="closeHelpPopup">&times;</button>
+      </div>
+      <div class="swipe-grid">
+        <div class="swipe-direction">
+          <img src="images/snake-directions/upSnake.png" alt="Up" />
+          <span>Swipe Up</span>
+        </div>
+        <div class="swipe-direction">
+          <img src="images/snake-directions/downSnake.png" alt="Down" />
+          <span>Swipe Down</span>
+        </div>
+        <div class="swipe-direction">
+          <img src="images/snake-directions/leftSnake.png" alt="Left" />
+          <span>Swipe Left</span>
+        </div>
+        <div class="swipe-direction">
+          <img src="images/snake-directions/rightSnake.png" alt="Right" />
+          <span>Swipe Right</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Three.js -->
+    <script src="https://unpkg.com/three@0.156.0/build/three.min.js"></script>
+
+    <script>
+      (() => {
+        // Add this near your other event listeners
+        const introVideo = document.getElementById("introVideo");
+
+        document.getElementById("startBtn").addEventListener("click", () => {
+          // Pause and reset video when starting game
+          if (introVideo) {
+            introVideo.pause();
+            introVideo.currentTime = 0;
+          }
+
+          startModal.classList.remove("show");
+          modalBackdrop.classList.remove("show");
+          restartGame();
+        });
+
+        // Restart video when returning to menu
+        const goMenuAction = () => {
+          gameOverModal.classList.remove("show");
+          gameOverOverlay.classList.remove("show");
+          modalBackdrop.classList.remove("show");
+          startModal.classList.add("show");
+          modalBackdrop.classList.add("show");
+          playing = false;
+          gameStarted = false;
+
+          // Restart video playback
+          if (introVideo) {
+            introVideo.currentTime = 0;
+            introVideo
+              .play()
+              .catch((err) => console.log("Video autoplay prevented:", err));
+          }
+        };
+
+        document
+          .getElementById("goMenu")
+          .addEventListener("click", goMenuAction);
+        document
+          .getElementById("closeGameOver")
+          .addEventListener("click", goMenuAction);
+
+        // Help Popup
+        function showHelpPopup() {
+          document.getElementById("helpPopupOverlay").classList.add("show");
+          document.getElementById("helpPopup").classList.add("show");
+        }
+
+        document.getElementById("closeHelpPopup").addEventListener("click", () => {
+          document.getElementById("helpPopupOverlay").classList.remove("show");
+          document.getElementById("helpPopup").classList.remove("show");
+        });
+
+        document.getElementById("helpPopupOverlay").addEventListener("click", () => {
+          document.getElementById("helpPopupOverlay").classList.remove("show");
+          document.getElementById("helpPopup").classList.remove("show");
+        });
+
+        // Scene setup
+        const canvas = document.getElementById("glcanvas");
+        const renderer = new THREE.WebGLRenderer({
+          canvas,
+          antialias: window.devicePixelRatio <= 1,
+          alpha: false,
+          powerPreference: "high-performance",
+        });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.setClearColor(0x0a0e12);
+
+        const textureLoader = new THREE.TextureLoader();
+        const insectTextures = [
+          textureLoader.load("images/frog.png"),
+          textureLoader.load("images/red-insect.png"),
+          textureLoader.load("images/yellow-insect.png"),
+        ];
+
+        const scene = new THREE.Scene();
+        // scene.fog = new THREE.Fog(0x0a0e12, 200, 400);
+
+        // Enhanced camera setup
+        const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+        camera.position.set(0, 160, 25);
+        camera.lookAt(0, 0, 0);
+
+        // Enhanced lighting
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        directionalLight.position.set(60, 120, 60);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.setScalar(2048);
+        directionalLight.shadow.camera.near = 1;
+        directionalLight.shadow.camera.far = 300;
+        directionalLight.shadow.camera.left = -150;
+        directionalLight.shadow.camera.right = 150;
+        directionalLight.shadow.camera.top = 150;
+        directionalLight.shadow.camera.bottom = -150;
+        scene.add(directionalLight);
+
+        // Responsive game dimensions
+
+        let gameDimensions = getGameDimensions();
+
+        // Enhanced ground with better texture
+        function createEnhancedGround() {
+          const grassTexture = generateEnhancedGrassTexture(512, 512);
+          grassTexture.wrapS = grassTexture.wrapT = THREE.RepeatWrapping;
+          grassTexture.repeat.set(
+            gameDimensions.width / 25,
+            gameDimensions.height / 25
+          );
+
+          const groundGeometry = new THREE.PlaneGeometry(
+            gameDimensions.width,
+            gameDimensions.height,
+            32,
+            32
+          );
+          const groundMaterial = new THREE.MeshLambertMaterial({
+            map: grassTexture,
+            transparent: true,
+            opacity: 1,
+          });
+
+          const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+          ground.rotation.x = -Math.PI / 2;
+          ground.receiveShadow = true;
+          scene.add(ground);
+
+          return ground;
+        }
+
+        let ground = createEnhancedGround();
+
+        // Enhanced fence
+        function createEnhancedFence(width, height) {
+          const fenceGroup = new THREE.Group();
+          const fenceMaterial = new THREE.MeshStandardMaterial({
+            color: 0x654321,
+            roughness: 0.8,
+            metalness: 0.1,
+          });
+
+          const postMaterial = new THREE.MeshStandardMaterial({
+            color: 0x8b4513,
+            roughness: 0.7,
+            metalness: 0.2,
+          });
+
+          const halfWidth = width / 2;
+          const halfHeight = height / 2;
+
+          // Enhanced fence posts
+          const postGeometry = new THREE.BoxGeometry(3, 18, 3);
+          const railGeometry = new THREE.BoxGeometry(width, 3, 3);
+
+          // Horizontal rails
+          const topRailFront = new THREE.Mesh(railGeometry, fenceMaterial);
+          topRailFront.position.set(0, 10, -halfHeight);
+          topRailFront.castShadow = true;
+          fenceGroup.add(topRailFront);
+
+          const bottomRailFront = new THREE.Mesh(railGeometry, fenceMaterial);
+          bottomRailFront.position.set(0, 5, -halfHeight);
+          bottomRailFront.castShadow = true;
+          fenceGroup.add(bottomRailFront);
+
+          const topRailBack = new THREE.Mesh(railGeometry, fenceMaterial);
+          topRailBack.position.set(0, 10, halfHeight);
+          topRailBack.castShadow = true;
+          fenceGroup.add(topRailBack);
+
+          const bottomRailBack = new THREE.Mesh(railGeometry, fenceMaterial);
+          bottomRailBack.position.set(0, 5, halfHeight);
+          bottomRailBack.castShadow = true;
+          fenceGroup.add(bottomRailBack);
+
+          // Vertical rails
+          const railVertical = new THREE.BoxGeometry(3, 3, height);
+
+          const topRailLeft = new THREE.Mesh(railVertical, fenceMaterial);
+          topRailLeft.position.set(-halfWidth, 10, 0);
+          topRailLeft.castShadow = true;
+          fenceGroup.add(topRailLeft);
+
+          const bottomRailLeft = new THREE.Mesh(railVertical, fenceMaterial);
+          bottomRailLeft.position.set(-halfWidth, 5, 0);
+          bottomRailLeft.castShadow = true;
+          fenceGroup.add(bottomRailLeft);
+
+          const topRailRight = new THREE.Mesh(railVertical, fenceMaterial);
+          topRailRight.position.set(halfWidth, 10, 0);
+          topRailRight.castShadow = true;
+          fenceGroup.add(topRailRight);
+
+          const bottomRailRight = new THREE.Mesh(railVertical, fenceMaterial);
+          bottomRailRight.position.set(halfWidth, 5, 0);
+          bottomRailRight.castShadow = true;
+          fenceGroup.add(bottomRailRight);
+
+          // Corner and intermediate posts
+          const postSpacing = 25;
+          for (let x = -halfWidth; x <= halfWidth; x += postSpacing) {
+            for (let z of [-halfHeight, halfHeight]) {
+              const post = new THREE.Mesh(postGeometry, postMaterial);
+              post.position.set(x, 9, z);
+              post.castShadow = true;
+              fenceGroup.add(post);
+            }
+          }
+
+          for (let z = -halfHeight; z <= halfHeight; z += postSpacing) {
+            for (let x of [-halfWidth, halfWidth]) {
+              const post = new THREE.Mesh(postGeometry, postMaterial);
+              post.position.set(x, 9, z);
+              post.castShadow = true;
+              fenceGroup.add(post);
+            }
+          }
+
+          scene.add(fenceGroup);
+          return fenceGroup;
+        }
+
+        let fence = createEnhancedFence(
+          gameDimensions.width,
+          gameDimensions.height
+        );
+
+        // Game bounds
+        const BOUNDS = {
+          minX: -gameDimensions.width / 2 + 8,
+          maxX: gameDimensions.width / 2 - 8,
+          minZ: -gameDimensions.height / 2 + 8,
+          maxZ: gameDimensions.height / 2 - 8,
+        };
+
+        // Enhanced snake system
+        let snake = [];
+        let direction = new THREE.Vector2(1, 0);
+        let nextDirection = new THREE.Vector2(1, 0);
+        let speed = 40;
+        let growthQueue = 0;
+        let snakeMeshes = [];
+        let eyeMeshes = [];
+
+        // Game state
+        let playing = false;
+        let gameStarted = false;
+        let score = 0;
+        let highScore = parseInt(localStorage.getItem("snake3d_high") || "0");
+        let lastTime = 0;
+        let insects = [];
+        let collisionCheckEnabledTime = 0;
+        const COLLISION_DELAY_MS = 800;
+        let timerInterval = null;
+        let elapsedTime = 0;
+
+        // UI elements
+        const scoreEl = document.getElementById("score");
+        const highScoreEl = document.getElementById("highscore");
+        const timerEl = document.getElementById("timer");
+        const startModal = document.getElementById("startGame");
+        const gameOverModal = document.getElementById("gameOver");
+        const gameOverOverlay = document.getElementById("gameOverOverlay");
+        const modalBackdrop = document.getElementById("modalBackdrop");
+        const goText = document.getElementById("goText");
+        const achievementText = document.getElementById("achievementText");
+
+        highScoreEl.textContent = highScore;
+
+        // Enhanced snake initialization
+        function initSnake() {
+          snakeMeshes.forEach((mesh) => scene.remove(mesh));
+          eyeMeshes.forEach((mesh) => scene.remove(mesh));
+          snakeMeshes = [];
+          eyeMeshes = [];
+
+          snake = [];
+          const startLength = 5;
+          const segmentSpacing = 6;
+
+          for (let i = 0; i < startLength; i++) {
+            snake.push(new THREE.Vector2(-40 - i * segmentSpacing, 0));
+          }
+
+          direction.set(1, 0);
+          nextDirection.set(1, 0);
+          growthQueue = 0;
+
+          createSnakeMeshes();
+        }
+
+        function createSnakeMeshes() {
+          snake.forEach((segment, index) => {
+            createSegmentMesh(index);
+          });
+        }
+
+        function createSegmentMesh(index) {
+          const isHead = index === 0;
+          const segmentRadius = isHead
+            ? 4.0
+            : Math.max(2.5, 3.8 - index * 0.02);
+
+          // Enhanced snake body with gradient coloring
+          const geometry = new THREE.SphereGeometry(segmentRadius, 16, 12);
+          const hue = isHead ? 0.3 : Math.max(0.25, 0.3 - index * 0.01);
+          const color = new THREE.Color().setHSL(hue, 0.8, 0.5);
+
+          const material = new THREE.MeshStandardMaterial({
+            color: color,
+            roughness: 0.2,
+            metalness: 0.1,
+            emissive: color,
+            emissiveIntensity: isHead ? 0.1 : 0.05,
+          });
+
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          scene.add(mesh);
+          snakeMeshes[index] = mesh;
+
+          // Enhanced head with eyes and details
+          if (isHead) {
+            const headGroup = new THREE.Group();
+
+            // Eyes
+            const eyeGeometry = new THREE.SphereGeometry(0.8, 8, 6);
+            const eyeMaterial = new THREE.MeshStandardMaterial({
+              color: 0x000000,
+              roughness: 0.1,
+              metalness: 0.8,
+            });
+
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(3.0, 1.2, 1.5);
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(3.0, 1.2, -1.5);
+
+            // Eye shine
+            const shineGeometry = new THREE.SphereGeometry(0.3, 6, 4);
+            const shineMaterial = new THREE.MeshStandardMaterial({
+              color: 0xffffff,
+              emissive: 0xffffff,
+              emissiveIntensity: 0.5,
+            });
+
+            const leftShine = new THREE.Mesh(shineGeometry, shineMaterial);
+            leftShine.position.set(3.2, 1.4, 1.7);
+            const rightShine = new THREE.Mesh(shineGeometry, shineMaterial);
+            rightShine.position.set(3.2, 1.4, -1.3);
+
+            headGroup.add(leftEye, rightEye, leftShine, rightShine);
+            mesh.add(headGroup);
+            eyeMeshes[0] = headGroup;
+          }
+        }
+
+        function updateSnakeMeshes() {
+          while (snakeMeshes.length < snake.length) {
+            createSegmentMesh(snakeMeshes.length);
+          }
+          while (snakeMeshes.length > snake.length) {
+            const mesh = snakeMeshes.pop();
+            scene.remove(mesh);
+            if (eyeMeshes.length > snakeMeshes.length) {
+              eyeMeshes.pop();
+            }
+          }
+
+          snake.forEach((segment, index) => {
+            const mesh = snakeMeshes[index];
+            if (mesh) {
+              const time = performance.now() * 0.001;
+              const yOffset = 4 + Math.sin(time * 2 + index * 0.3) * 0.5;
+              mesh.position.set(segment.x, yOffset, segment.y);
+
+              // Enhanced rotation
+              if (index === 0) {
+                const angle = Math.atan2(direction.y, direction.x);
+                mesh.rotation.y = -angle;
+                mesh.rotation.z = Math.sin(time * 3) * 0.1;
+              } else if (index > 0) {
+                const prev = snake[index - 1];
+                const curr = segment;
+                const angle = Math.atan2(prev.y - curr.y, prev.x - curr.x);
+                mesh.rotation.y = -angle;
+              }
+            }
+          });
+        }
+
+        // Enhanced insect system
+        function spawnInsect() {
+          const insectTexture =
+            insectTextures[Math.floor(Math.random() * insectTextures.length)];
+
+          const material = new THREE.SpriteMaterial({
+            map: insectTexture,
+            transparent: true,
+            alphaTest: 0.5,
+            color: 0xffffff, // Ensure no tinting
+            fog: false, // Ignore fog
+          });
+          const insect = new THREE.Sprite(material);
+          insect.scale.set(15, 15, 1); // Increased scale
+
+          const margin = 12;
+          insect.position.set(
+            THREE.MathUtils.randFloatSpread(
+              BOUNDS.maxX - BOUNDS.minX - margin * 2
+            ),
+            5 + Math.random() * 4,
+            THREE.MathUtils.randFloatSpread(
+              BOUNDS.maxZ - BOUNDS.minZ - margin * 2
+            )
+          );
+
+          insect.userData = {
+            bobPhase: Math.random() * Math.PI * 2,
+            pulsePhase: Math.random() * Math.PI * 2,
+          };
+
+          scene.add(insect);
+          insects.push(insect);
+        }
+
+        function updateInsects(deltaTime) {
+          const time = performance.now() * 0.001;
+
+          insects.forEach((insect, index) => {
+            // Enhanced animations
+            insect.position.y =
+              5 + Math.sin(time * 2.5 + insect.userData.bobPhase) * 2;
+            // insect.rotation.x += insect.userData.rotSpeed;
+            // insect.rotation.y += insect.userData.rotSpeed * 0.8;
+            // insect.rotation.z += insect.userData.rotSpeed * 0.3;
+
+            // Pulsing effect
+            // const pulse =
+            //   0.8 + Math.sin(time * 4 + insect.userData.pulsePhase) * 0.2;
+            insect.scale.set(12, 12, 1);
+
+            // Check collision with snake head
+            if (snake.length > 0) {
+              const head = snake[0];
+              const distance = Math.sqrt(
+                Math.pow(head.x - insect.position.x, 2) +
+                  Math.pow(head.y - insect.position.z, 2)
+              );
+
+              if (distance < 6) {
+                scene.remove(insect);
+                insects.splice(index, 1);
+
+                growthQueue += 4;
+                score += 15;
+                scoreEl.textContent = score;
+
+                if (score > highScore) {
+                  highScore = score;
+                  highScoreEl.textContent = highScore;
+                  localStorage.setItem("snake3d_high", highScore.toString());
+                }
+
+                spawnInsect();
+
+                // Haptic feedback
+                if (navigator.vibrate) {
+                  navigator.vibrate(50);
+                }
+              }
+            }
+          });
+        }
+
+        function gameStep(deltaTime) {
+          if (!playing || deltaTime <= 0) return;
+
+          if (nextDirection.length() > 0) {
+            const dot = direction.dot(nextDirection);
+            if (dot > -0.8) {
+              direction.copy(nextDirection);
+            }
+          }
+
+          const moveDistance = speed * deltaTime;
+          const head = snake[0].clone();
+          head.x += direction.x * moveDistance;
+          head.y += direction.y * moveDistance;
+
+          snake.unshift(head);
+
+          if (growthQueue > 0) {
+            growthQueue--;
+          } else {
+            snake.pop();
+          }
+
+          updateSnakeMeshes();
+          updateInsects(deltaTime);
+
+          if (performance.now() >= collisionCheckEnabledTime) {
+            checkCollisions();
+          }
+        }
+
+        function checkCollisions() {
+          if (snake.length === 0) return;
+
+          const head = snake[0];
+
+          // Wall collision
+          if (
+            head.x < BOUNDS.minX ||
+            head.x > BOUNDS.maxX ||
+            head.y < BOUNDS.minZ ||
+            head.y > BOUNDS.maxZ
+          ) {
+            endGame("⚠️ Ahh! you hit the wall");
+            return;
+          }
+
+          // Self collision with more lenient checking
+          const minCheckIndex = Math.max(20, Math.floor(snake.length * 0.3));
+          for (let i = minCheckIndex; i < snake.length; i++) {
+            const segment = snake[i];
+            const distance = Math.sqrt(
+              Math.pow(head.x - segment.x, 2) + Math.pow(head.y - segment.y, 2)
+            );
+            if (distance < 6) {
+              endGame("🐍 You ran into your self");
+              return;
+            }
+          }
+        }
+
+        function endGame(reason) {
+          playing = false;
+          if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+          }
+          const icon = reason.split(" ")[0];
+          const message = reason.split(" ").slice(1).join(" ");
+          goText.innerHTML = `<span class="go-icon">${icon}</span> ${message}`;
+
+          const imgHitWall = document.getElementById("gameOverHitWall");
+          const imgSelf = document.getElementById("gameOverSelf");
+
+          imgHitWall.style.display = "none";
+          imgSelf.style.display = "none";
+
+          if (reason.includes("hit the wall")) {
+            imgHitWall.style.display = "block";
+          } else if (reason.includes("ran into your self")) {
+            imgSelf.style.display = "block";
+          }
+
+          // Achievement system
+          let achievement = "";
+          if (score >= 500) achievement = "🏆 Snake Master!";
+          else if (score >= 300) achievement = "🥇 Expert Player!";
+          else if (score >= 200) achievement = "🥈 Great Job!";
+          else if (score >= 100) achievement = "🥉 Good Effort!";
+          else if (score >= 50) achievement = "👍 Getting Better!";
+
+          achievementText.textContent = achievement;
+
+          modalBackdrop.classList.add("show");
+          gameOverOverlay.classList.add("show");
+          gameOverModal.classList.add("show");
+
+          if (navigator.vibrate) {
+            navigator.vibrate([200, 100, 200, 100, 200]);
+          }
+        }
+
+        function restartGame() {
+          insects.forEach((insect) => scene.remove(insect));
+          insects = [];
+
+          score = 0;
+          scoreEl.textContent = "0";
+
+          // Reset pause button icon
+          document.getElementById("pauseBtn").innerHTML =
+            '<img src="/images/pause.svg" alt="Pause" />';
+
+          // Hide modals
+          gameOverModal.classList.remove("show");
+          gameOverOverlay.classList.remove("show");
+          startModal.classList.remove("show");
+          modalBackdrop.classList.remove("show");
+
+          initSnake();
+
+          // Spawn 3 insects at the start
+          // const insectCount = 3;
+          const insectCount = Math.max(
+            6,
+            Math.floor((gameDimensions.width * gameDimensions.height) / 3000)
+          );
+          for (let i = 0; i < insectCount; i++) {
+            spawnInsect();
+          }
+
+          playing = true;
+          gameStarted = true;
+          lastTime = performance.now();
+          collisionCheckEnabledTime = performance.now() + COLLISION_DELAY_MS;
+
+          if (timerInterval) clearInterval(timerInterval);
+          elapsedTime = 0;
+          timerEl.textContent = "00:00";
+          timerInterval = setInterval(() => {
+            if (playing) {
+              elapsedTime++;
+              const minutes = Math.floor(elapsedTime / 60)
+                .toString()
+                .padStart(2, "0");
+              const seconds = (elapsedTime % 60).toString().padStart(2, "0");
+              timerEl.textContent = `${minutes}:${seconds}`;
+            }
+          }, 1000);
+        }
+
+        function setDirection(x, y) {
+          if (!playing) return;
+          const newDir = new THREE.Vector2(x, y).normalize();
+          nextDirection.copy(newDir);
+        }
+
+        // Enhanced input handling
+        let keys = {};
+        let touchHandled = false;
+
+        document.addEventListener("keydown", (e) => {
+          keys[e.code] = true;
+
+          if (!gameStarted && (e.code === "Space" || e.code === "Enter")) {
+            startModal.classList.remove("show");
+            modalBackdrop.classList.remove("show");
+            restartGame();
+            return;
+          }
+
+          if (e.code === "KeyR") {
+            restartGame();
+            return;
+          }
+
+          if (e.code === "KeyP" || e.code === "Space") {
+            if (gameStarted) {
+              togglePause();
+            }
+            return;
+          }
+
+          switch (e.code) {
+            case "ArrowUp":
+            case "KeyW":
+              setDirection(0, -1);
+              e.preventDefault();
+              break;
+            case "ArrowDown":
+            case "KeyS":
+              setDirection(0, 1);
+              e.preventDefault();
+              break;
+            case "ArrowLeft":
+            case "KeyA":
+              setDirection(-1, 0);
+              e.preventDefault();
+              break;
+            case "ArrowRight":
+            case "KeyD":
+              setDirection(1, 0);
+              e.preventDefault();
+              break;
+          }
+        });
+
+        document.addEventListener("keyup", (e) => {
+          keys[e.code] = false;
+        });
+
+        // Enhanced touch controls
+        function handleDirectionInput(dir) {
+          if (touchHandled) return;
+          touchHandled = true;
+          setTimeout(() => (touchHandled = false), 150);
+
+          switch (dir) {
+            case "up":
+              setDirection(0, -1);
+              break;
+            case "down":
+              setDirection(0, 1);
+              break;
+            case "left":
+              setDirection(-1, 0);
+              break;
+            case "right":
+              setDirection(1, 0);
+              break;
+          }
+
+          if (navigator.vibrate) {
+            // navigator.vibrate(25);
+          }
+        }
+
+        document.querySelectorAll("#dpad button").forEach((btn) => {
+          const dir = btn.getAttribute("data-dir");
+
+          btn.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            handleDirectionInput(dir);
+          });
+
+          btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            handleDirectionInput(dir);
+          });
+        });
+
+        // Enhanced swipe detection
+        let touchStart = null;
+        const MIN_SWIPE_DISTANCE = 40;
+        const MAX_SWIPE_TIME = 400;
+
+        canvas.addEventListener(
+          "touchstart",
+          (e) => {
+            touchStart = {
+              x: e.touches[0].clientX,
+              y: e.touches[0].clientY,
+              time: Date.now(),
+            };
+          },
+          { passive: true }
+        );
+
+        canvas.addEventListener(
+          "touchmove",
+          (e) => {
+            e.preventDefault();
+          },
+          { passive: false }
+        );
+
+        canvas.addEventListener(
+          "touchend",
+          (e) => {
+            if (!touchStart || touchHandled) return;
+
+            const touchEnd = {
+              x: e.changedTouches[0].clientX,
+              y: e.changedTouches[0].clientY,
+              time: Date.now(),
+            };
+
+            const dx = touchEnd.x - touchStart.x;
+            const dy = touchEnd.y - touchStart.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const timeDiff = touchEnd.time - touchStart.time;
+
+            if (distance > MIN_SWIPE_DISTANCE && timeDiff < MAX_SWIPE_TIME) {
+              if (Math.abs(dx) > Math.abs(dy)) {
+                setDirection(dx > 0 ? 1 : -1, 0);
+              } else {
+                setDirection(0, dy > 0 ? 1 : -1);
+              }
+
+              if (navigator.vibrate) {
+                // navigator.vibrate(30);
+              }
+            }
+
+            touchStart = null;
+          },
+          { passive: true }
+        );
+
+        // Speed controls
+        document.getElementById("speedUp").addEventListener("click", () => {
+          speed = Math.min(speed + 10, 100);
+          // if (navigator.vibrate) navigator.vibrate(20);
+        });
+
+        document.getElementById("speedDown").addEventListener("click", () => {
+          speed = Math.max(speed - 10, 20);
+          // if (navigator.vibrate) navigator.vibrate(20);
+        });
+
+        // UI event listeners
+        function togglePause() {
+          if (!gameStarted) return;
+          playing = !playing;
+          const pauseBtn = document.getElementById("pauseBtn");
+          if (playing) {
+            lastTime = performance.now();
+            pauseBtn.innerHTML = '<img src="/images/pause.svg" alt="Pause" />';
+          } else {
+            pauseBtn.innerHTML =
+              '<svg width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.66667 1.33333V18.6667L14.6667 10L2.66667 1.33333Z" fill="white"/></svg>';
+          }
+        }
+
+        document.getElementById("startBtn").addEventListener("click", () => {
+          startModal.classList.remove("show");
+          modalBackdrop.classList.remove("show");
+          restartGame();
+        });
+
+        document.getElementById("goRestart").addEventListener("click", () => {
+          restartGame();
+        });
+
+        document.getElementById("goMenu").addEventListener("click", () => {
+          gameOverModal.classList.remove("show");
+          gameOverOverlay.classList.remove("show");
+          modalBackdrop.classList.remove("show");
+          startModal.classList.add("show");
+          modalBackdrop.classList.add("show");
+          playing = false;
+          gameStarted = false;
+        });
+
+        document.getElementById("restartBtn").addEventListener("click", () => {
+          restartGame();
+        });
+
+        document
+          .getElementById("pauseBtn")
+          .addEventListener("click", togglePause);
+
+        // Enhanced resize handler
+        function onWindowResize() {
+          const container = canvas.parentElement;
+          if (!container) return;
+          const rect = container.getBoundingClientRect();
+
+          renderer.setSize(rect.width, rect.height);
+          camera.aspect = rect.width / rect.height;
+
+          // Update game dimensions
+          const newDimensions = getGameDimensions();
+          if (
+            newDimensions.width !== gameDimensions.width ||
+            newDimensions.height !== gameDimensions.height
+          ) {
+            gameDimensions = newDimensions;
+
+            // Update bounds
+            Object.assign(BOUNDS, {
+              minX: -gameDimensions.width / 2 + 8,
+              maxX: gameDimensions.width / 2 - 8,
+              minZ: -gameDimensions.height / 2 + 8,
+              maxZ: gameDimensions.height / 2 - 8,
+            });
+
+            // Recreate ground and fence
+            scene.remove(ground);
+            scene.remove(fence);
+            ground = createEnhancedGround();
+            fence = createEnhancedFence(
+              gameDimensions.width,
+              gameDimensions.height
+            );
+          }
+
+          // Adjust camera
+          const gameAreaWidth = gameDimensions.width + 20;
+          const gameAreaHeight = gameDimensions.height + 20;
+          const fov = camera.fov * (Math.PI / 180);
+          const tanFov = Math.tan(fov / 2);
+          const distH = gameAreaWidth / 2 / (camera.aspect * tanFov);
+          const distV = gameAreaHeight / 2 / tanFov;
+
+          camera.position.y = Math.max(distH, distV) * 1.1;
+          camera.updateProjectionMatrix();
+
+          // Responsive header for mobile
+          const header = document.querySelector("header");
+          if (window.innerWidth <= 480) {
+            header.style.flexDirection = "column";
+            header.style.alignItems = "flex-start";
+            header.style.gap = "8px";
+          } else {
+            header.style.flexDirection = "row";
+            header.style.alignItems = "center";
+            header.style.gap = "";
+          }
+        }
+
+        // Increase mobile arena height
+        function getGameDimensions() {
+          const isPortrait = window.innerWidth < window.innerHeight;
+          const isMobile = window.innerWidth < 768;
+
+          if (isMobile) {
+            return {
+              width: isPortrait ? 140 : 180,
+              height: isPortrait ? 220 : 160, // Increased mobile height
+            };
+          } else {
+            return {
+              width: isPortrait ? 160 : 220,
+              height: isPortrait ? 220 : 160,
+            };
+          }
+        }
+
+        window.addEventListener("resize", onWindowResize);
+        window.addEventListener("orientationchange", () => {
+          setTimeout(onWindowResize, 100);
+        });
+
+        // Game loop
+        function animate(currentTime) {
+          requestAnimationFrame(animate);
+
+          const deltaTime = Math.min((currentTime - lastTime) / 1000, 0.02);
+          lastTime = currentTime;
+
+          gameStep(deltaTime);
+          renderer.render(scene, camera);
+        }
+
+        // Enhanced grass texture generator
+        function generateEnhancedGrassTexture(width, height) {
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+
+          // Create gradient base
+          const gradient = ctx.createLinearGradient(0, 0, 0, height);
+          gradient.addColorStop(0, "#25e610");
+          gradient.addColorStop(0.5, "#25e610");
+          gradient.addColorStop(1, "#25e610");
+
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, width, height);
+
+          // Add detailed grass texture
+          for (let i = 0; i < 20000; i++) {
+            const x = Math.random() * width;
+            const y = Math.random() * height;
+            const size = Math.random() * 4 + 1;
+
+            const grassGradient = ctx.createRadialGradient(x, y, 0, x, y, size);
+            const greenIntensity = Math.random() * 80 + 100;
+            const alpha = Math.random() * 0.6 + 0.2;
+            grassGradient.addColorStop(
+              0,
+              `rgba(60, ${greenIntensity}, 60, ${alpha})`
+            );
+            grassGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+
+            ctx.fillStyle = grassGradient;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Add lighter spots and variation
+          for (let i = 0; i < 5000; i++) {
+            const x = Math.random() * width;
+            const y = Math.random() * height;
+            const size = Math.random() * 3 + 0.5;
+
+            const lightGradient = ctx.createRadialGradient(x, y, 0, x, y, size);
+            lightGradient.addColorStop(0, "rgba(120, 180, 120, 0.4)");
+            lightGradient.addColorStop(0, "rgba(0, 0, 0, 0)");
+
+            ctx.fillStyle = lightGradient;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          return new THREE.CanvasTexture(canvas);
+        }
+        const helpPopupOverlay = document.createElement("div");
+        helpPopupOverlay.className = "help-popup-overlay";
+        helpPopupOverlay.id = "helpPopupOverlay";
+
+        const helpPopup = document.createElement("div");
+        helpPopup.className = "help-popup";
+        helpPopup.id = "helpPopup";
+
+        helpPopup.innerHTML = `
+    <div class="help-popup-header">
+        <h2>Swipe Gestures</h2>
+        <button id="closeHelpPopup">&times;</button>
+    </div>
+    <div class="swipe-grid">
+        <div class="swipe-direction">
+            <img src="/images/upSnake.png" alt="Swipe Up">
+            <span>Swipe Up</span>
+        </div>
+        <div class="swipe-direction">
+            <img src="/images/downSnake.png" alt="Swipe Down">
+            <span>Swipe Down</span>
+        </div>
+        <div class="swipe-direction">
+            <img src="/images/leftSnake.png" alt="Swipe Left">
+            <span>Swipe Left</span>
+        </div>
+        <div class="swipe-direction">
+          
+            <img src="/images/rightSnake.png" alt="Swipe Right">
+            <span>Swipe Right</span>
+        </div>
+    </div>
+`;
+
+        // Add elements to DOM
+        document.body.appendChild(helpPopupOverlay);
+        document.body.appendChild(helpPopup);
+
+        // Help popup functions
+        function showHelpPopup() {
+          helpPopup.classList.add("show");
+          helpPopupOverlay.classList.add("show");
+        }
+
+        function hideHelpPopup() {
+          helpPopup.classList.remove("show");
+          helpPopupOverlay.classList.remove("show");
+        }
+
+        // Event listeners for help popup
+        document
+          .getElementById("helpButton")
+          .addEventListener("click", showHelpPopup);
+        document
+          .getElementById("closeHelpPopup")
+          .addEventListener("click", hideHelpPopup);
+        helpPopupOverlay.addEventListener("click", hideHelpPopup);
+
+        // Initialize
+        modalBackdrop.classList.add("show");
+        onWindowResize();
+        animate(0);
+
+        // Prevent context menu and scrolling
+        canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+        document.body.addEventListener(
+          "touchmove",
+          (e) => {
+            if (
+              e.target === canvas ||
+              e.target.closest(".controls") ||
+              e.target.closest(".speed-controls")
+            ) {
+              e.preventDefault();
+            }
+          },
+          { passive: false }
+        );
+
+        // PWA-like experience
+        if ("serviceWorker" in navigator) {
+          window.addEventListener("load", () => {
+            navigator.serviceWorker.register("/sw.js").catch(() => {});
+          });
+        }
+
+        // Visibility API for pause on tab switch
+        document.addEventListener("visibilitychange", () => {
+          if (document.hidden && playing && gameStarted) {
+            togglePause();
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

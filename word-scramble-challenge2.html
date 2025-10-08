@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Word Cube Scramble</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg-color: #f4f7f9;
+        --primary-color: #4a90e2; /* Cool Blue */
+        --secondary-color: #50e3c2; /* Teal */
+        --accent-color: #f5a623; /* Orange-Gold */
+        --correct-color: #7ed321; /* Bright Green */
+        --incorrect-color: #d0021b; /* Strong Red */
+        --cube-size: 60px;
+        --font-color: #4a4a4a;
+      }
+      body {
+        background-color: var(--bg-color);
+        font-family: "Poppins", sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        color: var(--font-color);
+      }
+      .game-container {
+        width: 90%;
+        max-width: 700px;
+        text-align: center;
+        transition: filter 0.3s;
+      }
+      .game-container.blur-bg {
+        filter: blur(5px);
+      }
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(244, 247, 249, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(4px);
+      }
+      .modal-content {
+        background-color: #fff;
+        padding: 40px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      }
+      .modal-content .logo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: 20px;
+        color: #fff;
+        font-size: 2.5rem;
+        font-weight: 600;
+        padding: 20px;
+        margin: 0 auto 20px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+      }
+      .modal-content h1 {
+        margin-bottom: 10px;
+      }
+      .modal-content p {
+        margin-bottom: 30px;
+        font-size: 1.1rem;
+        color: var(--font-color);
+      }
+      .game-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 10px;
+      }
+      .game-header .logo {
+        width: 50px;
+        height: 50px;
+        padding: 10px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: 12px;
+        color: #fff;
+        font-size: 1.5rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+      }
+      .game-header h1 {
+        margin: 0;
+        font-size: 2.2rem;
+      }
+      h1 {
+        color: var(--primary-color);
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+      .stats-container {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1.5rem;
+        margin-bottom: 30px;
+        padding: 0 20px;
+      }
+      .drop-zone {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 40px;
+        height: calc(var(--cube-size) + 10px);
+      }
+      .drop-slot {
+        width: var(--cube-size);
+        height: var(--cube-size);
+        background-color: #e9eef2;
+        border-radius: 10px;
+        border: 2px dashed var(--primary-color);
+        transition: background-color 0.3s;
+      }
+      .drop-slot.drag-over {
+        background-color: #d8eaff;
+      }
+      .source-zone {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        min-height: calc(var(--cube-size) + 20px);
+        padding: 10px;
+        background-color: #e9eef2;
+        border-radius: 10px;
+      }
+      .letter-cube {
+        width: var(--cube-size);
+        height: var(--cube-size);
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 2rem;
+        cursor: grab;
+        user-select: none;
+        transition: transform 0.2s, box-shadow 0.2s;
+        animation: pop-in 0.5s ease-out forwards;
+      }
+      .letter-cube.dragging {
+        opacity: 0.5;
+        transform: scale(1.1);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        cursor: grabbing;
+      }
+      .letter-cube.correct {
+        animation: jump 0.5s ease;
+        background-color: var(--correct-color);
+        color: #fff;
+      }
+      .letter-cube.incorrect {
+        animation: wobble 0.5s ease;
+        background-color: var(--incorrect-color);
+        color: #fff;
+      }
+      @keyframes pop-in {
+        from {
+          opacity: 0;
+          transform: scale(0.5);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      @keyframes jump {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-20px);
+        }
+      }
+      @keyframes wobble {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-10px);
+        }
+        75% {
+          transform: translateX(10px);
+        }
+      }
+      .btn {
+        font-size: 1.2rem;
+        padding: 10px 25px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+      }
+      .hidden {
+        display: none;
+      }
+       #restart-btn {
+        background: transparent;
+        border: none;
+        font-size: 1.8rem;
+        cursor: pointer;
+        padding: 5px;
+        line-height: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="startModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="logo">WCS</div>
+        <h1>Word Cube Scramble</h1>
+        <p>Unscramble the letters to form a word!</p>
+        <button id="modalStartBtn" class="btn" style="background-color: var(--primary-color); color: #fff;">Start Game</button>
+      </div>
+    </div>
+    <div class="game-container blur-bg">
+      <div class="game-header">
+        <div class="logo">WCS</div>
+        <h1>Word Cube Scramble</h1>
+         <button id="restart-btn" title="Restart Game">🔄</button>
+      </div>
+      <div class="stats-container">
+        <div id="score">Score: 0</div>
+        <div id="message">Arrange the letters!</div>
+        <div id="timer">Time: 30s</div>
+      </div>
+      <div class="drop-zone" id="drop-zone"></div>
+      <div class="source-zone" id="source-zone"></div>
+      <div style="margin-top: 30px">
+        <button
+          class="btn"
+          id="check-btn"
+          style="background-color: var(--accent-color); color: #fff"
+        >
+          Check
+        </button>
+        <button
+          class="btn hidden"
+          id="next-btn"
+          style="background-color: var(--primary-color); color: #fff"
+        >
+          Next Word
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // Use a set to track used words and fetch random words from an API
+      let usedWords = new Set();
+      let currentWord = "";
+      let score = 0;
+      let timer;
+      let timeLeft = 30;
+
+      const dropZone = document.getElementById("drop-zone");
+      const sourceZone = document.getElementById("source-zone");
+      const checkBtn = document.getElementById("check-btn");
+      const nextBtn = document.getElementById("next-btn");
+      const scoreEl = document.getElementById("score");
+      const messageEl = document.getElementById("message");
+      const timerEl = document.getElementById("timer");
+      const startModal = document.getElementById("startModal");
+      const modalStartBtn = document.getElementById("modalStartBtn");
+      const gameContainer = document.querySelector(".game-container");
+      const restartBtn = document.getElementById("restart-btn");
+
+      let draggedCube = null;
+
+      function startGame() {
+        startModal.style.display = "none";
+        gameContainer.classList.remove("blur-bg");
+        score = 0;
+        usedWords.clear();
+        scoreEl.textContent = `Score: ${score}`;
+        newGame();
+      }
+
+       function restartGame() {
+        score = 0;
+        usedWords.clear();
+        scoreEl.textContent = `Score: ${score}`;
+        newGame();
+      }
+
+      async function newGame() {
+        clearInterval(timer);
+        timeLeft = 30;
+        dropZone.innerHTML = "";
+        sourceZone.innerHTML = "";
+        messageEl.textContent = "Arrange the letters!";
+        checkBtn.classList.remove("hidden");
+        nextBtn.classList.add("hidden");
+
+        // Fetch a random word from the API, retry if already used
+        let word = "";
+        let tries = 0;
+        while (!word || usedWords.has(word)) {
+            tries++;
+            if (tries > 10) { // Avoid infinite loop and use fallback
+                const fallback = ["planet", "galaxy", "comet", "space", "earth", "mars", "lunar", "solar"];
+                const availableFallbacks = fallback.filter(w => !usedWords.has(w));
+                word = availableFallbacks.length > 0 ? availableFallbacks[Math.floor(Math.random() * availableFallbacks.length)] : "space";
+                break;
+            }
+            try {
+                const wordLength = Math.floor(Math.random() * 4) + 5; // 5 to 8 letters
+                const res = await fetch(
+                `https://random-word-api.herokuapp.com/word?length=${wordLength}`
+                );
+                if (!res.ok) throw new Error('API request failed');
+                const data = await res.json();
+                word = data[0].toLowerCase();
+            } catch(e) {
+                console.error("API fetch failed, trying again.", e);
+                word = ""; // reset word to retry loop
+            }
+        }
+        usedWords.add(word);
+        currentWord = word;
+        const scrambled = currentWord.split("").sort(() => 0.5 - Math.random());
+
+        for (let i = 0; i < currentWord.length; i++) {
+          const slot = document.createElement("div");
+          slot.classList.add("drop-slot");
+          slot.dataset.index = i;
+          dropZone.appendChild(slot);
+        }
+
+        scrambled.forEach((letter) => {
+          const cube = document.createElement("div");
+          cube.classList.add("letter-cube");
+          cube.textContent = letter;
+          cube.draggable = true;
+          sourceZone.appendChild(cube);
+        });
+
+        addDragListeners();
+        startTimer();
+      }
+
+      function addDragListeners() {
+        const cubes = document.querySelectorAll(".letter-cube");
+        const slots = document.querySelectorAll(".drop-slot");
+
+        cubes.forEach((cube) => {
+          cube.addEventListener("dragstart", dragStart);
+          cube.addEventListener("dragend", dragEnd);
+        });
+
+        slots.forEach((slot) => {
+          slot.addEventListener("dragover", dragOver);
+          slot.addEventListener("dragenter", dragEnter);
+          slot.addEventListener("dragleave", dragLeave);
+          slot.addEventListener("drop", dragDrop);
+        });
+
+        // Also allow dropping back into the source zone
+        sourceZone.addEventListener("dragover", dragOver);
+        sourceZone.addEventListener("drop", (e) => {
+          if (draggedCube) {
+            sourceZone.appendChild(draggedCube);
+          }
+        });
+      }
+
+      function dragStart(e) {
+        draggedCube = e.target;
+        setTimeout(() => e.target.classList.add("dragging"), 0);
+      }
+
+      function dragEnd(e) {
+        e.target.classList.remove("dragging");
+        draggedCube = null;
+      }
+
+      function dragOver(e) {
+        e.preventDefault();
+      }
+
+      function dragEnter(e) {
+        e.preventDefault();
+        if (e.target.classList.contains("drop-slot")) {
+          e.target.classList.add("drag-over");
+        }
+      }
+
+      function dragLeave(e) {
+        if (e.target.classList.contains("drop-slot")) {
+          e.target.classList.remove("drag-over");
+        }
+      }
+
+      function dragDrop(e) {
+        e.preventDefault();
+        if (e.target.classList.contains("drop-slot")) {
+          e.target.classList.remove("drag-over");
+          // If slot already has a cube, swap them
+          if (e.target.children.length > 0) {
+            const existingCube = e.target.children[0];
+            sourceZone.appendChild(existingCube);
+          }
+          e.target.appendChild(draggedCube);
+        }
+      }
+
+      function checkGuess(showAnswer = false) {
+        clearInterval(timer);
+        let guess = "";
+        const slots = dropZone.querySelectorAll(".drop-slot");
+        slots.forEach((slot) => {
+          if (slot.children.length > 0) {
+            guess += slot.children[0].textContent;
+          }
+        });
+
+        const isCorrect = guess === currentWord;
+        slots.forEach((slot, index) => {
+          if (slot.children.length > 0) {
+            const cube = slot.children[0];
+            if (isCorrect) {
+              cube.classList.add("correct");
+            } else {
+              cube.classList.add("incorrect");
+            }
+          }
+        });
+
+        if (isCorrect) {
+          score++;
+          scoreEl.textContent = `Score: ${score}`;
+          messageEl.textContent = "Correct! Excellent!";
+        } else if (showAnswer) {
+          messageEl.textContent = `Time's Up! The correct word was: ${currentWord}`;
+        } else {
+          messageEl.textContent = `Not quite! The correct word was: ${currentWord}`;
+        }
+
+        checkBtn.classList.add("hidden");
+        nextBtn.classList.remove("hidden");
+      }
+
+      function startTimer() {
+        timerEl.textContent = `Time: ${timeLeft}s`;
+        timer = setInterval(() => {
+          timeLeft--;
+          timerEl.textContent = `Time: ${timeLeft}s`;
+          if (timeLeft === 0) {
+            clearInterval(timer);
+            checkGuess(true); // Show answer when time is up
+          }
+        }, 1000);
+      }
+
+      checkBtn.addEventListener("click", checkGuess);
+      nextBtn.addEventListener("click", newGame);
+      modalStartBtn.addEventListener("click", startGame);
+      restartBtn.addEventListener("click", restartGame);
+
+    </script>
+  </body>
+</html>

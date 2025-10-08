@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Explorer Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            padding: 15px;
+        }
+
+        .header h1 {
+            font-size: clamp(20px, 5vw, 36px);
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+        }
+
+        .dropdown-container {
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        select {
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 25px;
+            border: 3px solid #fff;
+            background: #fff;
+            cursor: pointer;
+            font-family: inherit;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .game-container {
+            display: flex;
+            gap: 15px;
+            max-width: 1400px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+        .map-section {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .map-canvas {
+            width: 100%;
+            height: 600px;
+            border: 4px dashed #ccc;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .map-canvas.active {
+            border-color: #4CAF50;
+            background: white;
+        }
+
+        .map-canvas.disabled {
+            filter: grayscale(100%);
+            opacity: 0.5;
+        }
+
+        .map-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            position: relative;
+            z-index: 1;
+        }
+
+        .map-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+
+        .states-menu {
+            flex: 0 0 280px;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            max-height: 650px;
+            overflow-y: auto;
+        }
+
+        .states-menu h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: clamp(18px, 4vw, 24px);
+        }
+
+        .state-item {
+            padding: 12px;
+            margin: 8px 0;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 12px;
+            cursor: move;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+            touch-action: none;
+        }
+
+        .state-item:hover {
+            transform: scale(1.05);
+        }
+
+        .state-item.placed {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .state-label {
+            position: absolute;
+            background: rgba(255, 215, 0, 0.9);
+            color: #000;
+            padding: 3px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 5;
+            box-shadow: 0 0 10px gold;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { box-shadow: 0 0 10px gold; }
+            50% { box-shadow: 0 0 20px gold, 0 0 30px gold; }
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .flag-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 400px;
+            aspect-ratio: 3/2;
+            display: none;
+            z-index: 10;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: wave 3s ease-in-out infinite;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: translate(-50%, -50%) perspective(500px) rotateY(-5deg); }
+            50% { transform: translate(-50%, -50%) perspective(500px) rotateY(5deg); }
+        }
+
+        .progress {
+            text-align: center;
+            color: #667eea;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                flex-direction: column;
+            }
+            
+            .states-menu {
+                flex: 1;
+                max-height: 300px;
+            }
+
+            .map-canvas {
+                height: 450px;
+            }
+
+            .state-label {
+                font-size: 8px;
+                padding: 2px 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🗺️ Map Explorer Game 🗺️</h1>
+    </div>
+
+    <div class="dropdown-container">
+        <select id="mapSelector">
+            <option value="india">India Map</option>
+            <option value="karnataka">Karnataka Map</option>
+        </select>
+    </div>
+
+    <div class="game-container">
+        <div class="map-section">
+            <div class="progress" id="progress">Placed: 0 / 0</div>
+            <div class="map-canvas disabled" id="mapCanvas">
+                <img id="mapImage" class="map-image" alt="Map">
+                <canvas id="mapOverlay" class="map-overlay"></canvas>
+                <div class="flag-overlay" id="flagOverlay"></div>
+            </div>
+        </div>
+
+        <div class="states-menu">
+            <h2>📍 Drag States Here</h2>
+            <div id="statesList"></div>
+        </div>
+    </div>
+
+    <div class="celebration" id="celebration"></div>
+
+    <script>
+        const indiaStates = [
+            { name: 'Andhra Pradesh', x: 0.51, y: 0.62 },
+            { name: 'Arunachal Pradesh', x: 0.68, y: 0.23 },
+            { name: 'Assam', x: 0.65, y: 0.30 },
+            { name: 'Bihar', x: 0.53, y: 0.35 },
+            { name: 'Chhattisgarh', x: 0.48, y: 0.48 },
+            { name: 'Goa', x: 0.35, y: 0.60 },
+            { name: 'Gujarat', x: 0.28, y: 0.42 },
+            { name: 'Haryana', x: 0.36, y: 0.24 },
+            { name: 'Himachal Pradesh', x: 0.37, y: 0.18 },
+            { name: 'Jharkhand', x: 0.52, y: 0.42 },
+            { name: 'Karnataka', x: 0.39, y: 0.66 },
+            { name: 'Kerala', x: 0.37, y: 0.78 },
+            { name: 'Madhya Pradesh', x: 0.40, y: 0.42 },
+            { name: 'Maharashtra', x: 0.38, y: 0.52 },
+            { name: 'Manipur', x: 0.69, y: 0.36 },
+            { name: 'Meghalaya', x: 0.63, y: 0.33 },
+            { name: 'Mizoram', x: 0.67, y: 0.39 },
+            { name: 'Nagaland', x: 0.69, y: 0.32 },
+            { name: 'Odisha', x: 0.54, y: 0.48 },
+            { name: 'Punjab', x: 0.34, y: 0.20 },
+            { name: 'Rajasthan', x: 0.32, y: 0.32 },
+            { name: 'Sikkim', x: 0.56, y: 0.25 },
+            { name: 'Tamil Nadu', x: 0.42, y: 0.78 },
+            { name: 'Telangana', x: 0.44, y: 0.55 },
+            { name: 'Tripura', x: 0.64, y: 0.37 },
+            { name: 'Uttar Pradesh', x: 0.45, y: 0.32 },
+            { name: 'Uttarakhand', x: 0.42, y: 0.22 },
+            { name: 'West Bengal', x: 0.58, y: 0.40 },
+            { name: 'Jammu & Kashmir', x: 0.35, y: 0.13 },
+            { name: 'Delhi', x: 0.38, y: 0.25 }
+        ];
+
+        const karnatakaDistricts = [
+            { name: 'Bagalkot', x: 0.40, y: 0.28 },
+            { name: 'Ballari', x: 0.62, y: 0.32 },
+            { name: 'Belagavi', x: 0.28, y: 0.22 },
+            { name: 'Bengaluru Rural', x: 0.52, y: 0.62 },
+            { name: 'Bengaluru Urban', x: 0.52, y: 0.65 },
+            { name: 'Bidar', x: 0.58, y: 0.18 },
+            { name: 'Chamarajanagar', x: 0.50, y: 0.82 },
+            { name: 'Chikkaballapur', x: 0.60, y: 0.60 },
+            { name: 'Chikkamagaluru', x: 0.42, y: 0.58 },
+            { name: 'Chitradurga', x: 0.48, y: 0.48 },
+            { name: 'Dakshina Kannada', x: 0.32, y: 0.68 },
+            { name: 'Davanagere', x: 0.48, y: 0.42 },
+            { name: 'Dharwad', x: 0.38, y: 0.35 },
+            { name: 'Gadag', x: 0.45, y: 0.38 },
+            { name: 'Hassan', x: 0.45, y: 0.65 },
+            { name: 'Haveri', x: 0.42, y: 0.42 },
+            { name: 'Kalaburagi', x: 0.58, y: 0.25 },
+            { name: 'Kodagu', x: 0.38, y: 0.72 },
+            { name: 'Kolar', x: 0.62, y: 0.62 },
+            { name: 'Koppal', x: 0.52, y: 0.35 },
+            { name: 'Mandya', x: 0.48, y: 0.70 },
+            { name: 'Mysuru', x: 0.45, y: 0.75 },
+            { name: 'Raichur', x: 0.58, y: 0.38 },
+            { name: 'Ramanagara', x: 0.48, y: 0.68 },
+            { name: 'Shivamogga', x: 0.42, y: 0.52 },
+            { name: 'Tumakuru', x: 0.48, y: 0.58 },
+            { name: 'Udupi', x: 0.35, y: 0.62 },
+            { name: 'Uttara Kannada', x: 0.32, y: 0.48 },
+            { name: 'Vijayapura', x: 0.48, y: 0.28 },
+            { name: 'Yadgir', x: 0.60, y: 0.32 }
+        ];
+
+        // Using data URLs for reliable loading
+        const indiaMapSVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 800'%3E%3Cpath d='M300 50 L350 100 L380 150 L390 180 L420 200 L450 180 L480 200 L500 240 L510 280 L500 320 L490 340 L480 360 L470 380 L460 400 L450 420 L440 440 L420 460 L400 480 L380 500 L360 520 L340 540 L320 560 L300 580 L280 600 L260 620 L240 640 L220 650 L200 640 L180 620 L160 600 L140 580 L130 560 L125 540 L120 520 L115 500 L110 480 L105 460 L100 440 L95 420 L90 400 L85 380 L80 360 L80 340 L85 320 L90 300 L100 280 L110 260 L120 240 L130 220 L140 200 L150 180 L160 160 L180 140 L200 120 L220 100 L240 80 L260 65 L280 55 Z' fill='%235B9BD5' stroke='white' stroke-width='2'/%3E%3C/svg%3E`;
+        
+        const karnatakaMapSVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 700'%3E%3Cpath d='M150 100 L200 110 L240 130 L270 150 L300 180 L330 220 L350 260 L360 300 L365 340 L368 380 L370 420 L368 460 L360 500 L345 540 L320 570 L290 590 L260 600 L230 605 L200 600 L170 585 L145 565 L125 540 L110 510 L100 480 L95 450 L92 420 L90 390 L92 360 L97 330 L105 300 L115 270 L125 240 L135 210 L140 180 L142 150 L145 120 Z' fill='%23FF8C42' stroke='white' stroke-width='2'/%3E%3C/svg%3E`;
+
+        let currentMap = 'india';
+        let placedCount = 0;
+        let totalCount = 0;
+        let draggedElement = null;
+        let draggedStateName = null;
+        let placedStates = {};
+        let canvas, ctx, mapImg;
+
+        function initGame() {
+            canvas = document.getElementById('mapOverlay');
+            ctx = canvas.getContext('2d');
+            mapImg = document.getElementById('mapImage');
+
+            document.getElementById('mapSelector').addEventListener('change', (e) => {
+                currentMap = e.target.value;
+                loadMap();
+            });
+
+            canvas.addEventListener('dragover', (e) => e.preventDefault());
+            canvas.addEventListener('drop', handleDrop);
+
+            canvas.addEventListener('touchmove', handleTouchMove);
+            canvas.addEventListener('touchend', handleTouchEnd);
+
+            loadMap();
+        }
+
+        function loadMap() {
+            const mapCanvas = document.getElementById('mapCanvas');
+            const statesList = document.getElementById('statesList');
+            
+            statesList.innerHTML = '';
+            mapCanvas.classList.add('disabled');
+            mapCanvas.classList.remove('active');
+            document.getElementById('flagOverlay').style.display = 'none';
+            placedStates = {};
+            
+            const states = currentMap === 'india' ? indiaStates : karnatakaDistricts;
+            totalCount = states.length;
+            placedCount = 0;
+            
+            document.getElementById('progress').textContent = `Placed: ${placedCount} / ${totalCount}`;
+
+            mapImg.src = currentMap === 'india' ? indiaMapSVG : karnatakaMapSVG;
+
+            mapImg.onload = () => {
+                canvas.width = mapImg.naturalWidth || 600;
+                canvas.height = mapImg.naturalHeight || 800;
+                resizeCanvas();
+            };
+            
+            mapImg.onerror = () => {
+                console.error('Map failed to load');
+                mapImg.src = currentMap === 'india' ? indiaMapSVG : karnatakaMapSVG;
+            };
+
+            const shuffled = [...states].sort(() => Math.random() - 0.5);
+            shuffled.forEach(state => {
+                const item = document.createElement('div');
+                item.className = 'state-item';
+                item.textContent = state.name;
+                item.draggable = true;
+                item.dataset.state = state.name;
+                
+                item.addEventListener('dragstart', (e) => {
+                    draggedElement = item;
+                    draggedStateName = state.name;
+                    mapCanvas.classList.add('active');
+                    mapCanvas.classList.remove('disabled');
+                });
+                
+                item.addEventListener('dragend', () => {
+                    if (!item.classList.contains('placed')) {
+                        mapCanvas.classList.add('disabled');
+                    }
+                });
+
+                item.addEventListener('touchstart', (e) => {
+                    draggedElement = item;
+                    draggedStateName = state.name;
+                    mapCanvas.classList.add('active');
+                    mapCanvas.classList.remove('disabled');
+                });
+                
+                statesList.appendChild(item);
+            });
+        }
+
+        function resizeCanvas() {
+            const rect = mapImg.getBoundingClientRect();
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width;
+            const y = (e.clientY - rect.top) / rect.height;
+            
+            checkPlacement(x, y);
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+        }
+
+        function handleTouchEnd(e) {
+            if (!draggedElement) return;
+            
+            const touch = e.changedTouches[0];
+            const rect = canvas.getBoundingClientRect();
+            const x = (touch.clientX - rect.left) / rect.width;
+            const y = (touch.clientY - rect.top) / rect.height;
+            
+            checkPlacement(x, y);
+        }
+
+        function checkPlacement(x, y) {
+            const states = currentMap === 'india' ? indiaStates : karnatakaDistricts;
+            const targetState = states.find(s => s.name === draggedStateName);
+            
+            if (!targetState) return;
+
+            const distance = Math.sqrt(Math.pow(x - targetState.x, 2) + Math.pow(y - targetState.y, 2));
+            
+            if (distance < 0.08) {
+                draggedElement.classList.add('placed');
+                draggedElement.draggable = false;
+                placedStates[targetState.name] = targetState;
+                
+                const label = document.createElement('div');
+                label.className = 'state-label';
+                label.textContent = targetState.name;
+                const rect = canvas.getBoundingClientRect();
+                label.style.left = (targetState.x * rect.width) + 'px';
+                label.style.top = (targetState.y * rect.height) + 'px';
+                label.style.transform = 'translate(-50%, -50%)';
+                document.getElementById('mapCanvas').appendChild(label);
+                
+                placedCount++;
+                document.getElementById('progress').textContent = `Placed: ${placedCount} / ${totalCount}`;
+                
+                if (placedCount === totalCount) {
+                    setTimeout(showCelebration, 500);
+                }
+            } else {
+                document.getElementById('mapCanvas').classList.add('shake');
+                setTimeout(() => document.getElementById('mapCanvas').classList.remove('shake'), 500);
+            }
+
+            draggedElement = null;
+            draggedStateName = null;
+        }
+
+        function showCelebration() {
+            const flagOverlay = document.getElementById('flagOverlay');
+            
+            if (currentMap === 'india') {
+                flagOverlay.innerHTML = `
+                    <div style="width:100%;height:33.33%;background:#FF9933;"></div>
+                    <div style="width:100%;height:33.33%;background:#FFFFFF;position:relative;">
+                        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:15%;aspect-ratio:1;border:2px solid #000080;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                            <svg viewBox="0 0 100 100" style="width:100%;height:100%;">
+                                ${Array(24).fill(0).map((_, i) => `<line x1="50" y1="50" x2="50" y2="10" stroke="#000080" stroke-width="2" transform="rotate(${i*15} 50 50)"/>`).join('')}
+                                <circle cx="50" cy="50" r="35" fill="none" stroke="#000080" stroke-width="2"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div style="width:100%;height:33.33%;background:#138808;"></div>
+                `;
+            } else {
+                flagOverlay.innerHTML = `
+                    <div style="width:100%;height:50%;background:#FFC107;"></div>
+                    <div style="width:100%;height:50%;background:#DC143C;"></div>
+                `;
+            }
+            
+            flagOverlay.style.display = 'block';
+            
+            const celebration = document.getElementById('celebration');
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'fixed';
+                confetti.style.width = '10px';
+                confetti.style.height = '10px';
+                confetti.style.background = ['#FF9933', '#FFFFFF', '#138808', '#FFC107'][Math.floor(Math.random() * 4)];
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.top = '-10px';
+                confetti.style.animation = `fall ${2 + Math.random() * 3}s linear`;
+                celebration.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 5000);
+            }
+        }
+
+        const style = document.createElement('style');
+        style.textContent = `@keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; }}`;
+        document.head.appendChild(style);
+
+        initGame();
+    </script>
+</body>
+</html>

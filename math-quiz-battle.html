@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Math Quiz Battle ⚔️</title>
+    <style>
+      :root {
+        --bg: #fff9f2;
+        --card: #fff;
+        --accent: #ff7aa2;
+        --accent-2: #ffd166;
+        --good: #7ddc8a;
+        --bad: #ff7a7a;
+        --muted: #6b7280;
+        --shadow: 0 6px 18px rgba(16, 24, 40, 0.08);
+        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: linear-gradient(180deg, #fff9f2 0%, #f0f7ff 100%);
+        color: #0f172a;
+      }
+      .wrap {
+        max-width: 920px;
+        margin: 20px auto;
+        padding: 18px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        transition: filter 0.3s ease-in-out;
+      }
+      .blur-bg {
+        filter: blur(5px);
+      }
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 249, 242, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        backdrop-filter: blur(4px);
+      }
+      .modal-content {
+        text-align: center;
+        padding: 30px;
+      }
+      .modal-content .logo {
+        margin: 0 auto 15px;
+      }
+      .modal-content h1 {
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+      .modal-content .sub {
+        margin-bottom: 20px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .logo {
+        width: 64px;
+        height: 64px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 22px;
+        box-shadow: var(--shadow);
+      }
+      h1 {
+        margin: 0;
+        font-size: 20px;
+      }
+      .sub {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .card {
+        background: var(--card);
+        border-radius: 14px;
+        padding: 14px;
+        box-shadow: var(--shadow);
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .big {
+        font-size: 28px;
+        font-weight: 700;
+      }
+      .question-area {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .question-box {
+        background: linear-gradient(180deg, #ffffff, #fff7fb);
+        border-radius: 12px;
+        padding: 16px;
+        border: 2px solid rgba(0, 0, 0, 0.03);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .qleft {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .problem {
+        font-size: 26px;
+        font-weight: 800;
+      }
+      .type-pill {
+        font-size: 12px;
+        padding: 6px 8px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #f7e7ff, #e9f7ff);
+        color: #0f172a;
+        width: fit-content;
+      }
+      .options {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+      .option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 10px;
+        border: 2px solid rgba(2, 6, 23, 0.06);
+        cursor: pointer;
+        user-select: none;
+        background: linear-gradient(180deg, #fff, #fbfdff);
+      }
+      .option input {
+        width: 20px;
+        height: 20px;
+      }
+      .submit-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      button.btn {
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        border: none;
+        color: white;
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 6px 14px rgba(255, 122, 162, 0.12);
+      }
+      button.ghost {
+        background: transparent;
+        border: 2px solid rgba(2, 6, 23, 0.06);
+        padding: 8px 10px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      .timer {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .progress {
+        height: 12px;
+        background: rgba(2, 6, 23, 0.06);
+        border-radius: 999px;
+        overflow: hidden;
+        width: 220px;
+      }
+      .progress > i {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, #ffd166, #ff7aa2);
+        width: 100%;
+        transition: width 0.2s linear;
+      }
+      .scoreboard {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .score-pill {
+        background: linear-gradient(180deg, #ffffff, #fbfdff);
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 2px solid rgba(2, 6, 23, 0.06);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 110px;
+      }
+      .small {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .big-score {
+        font-size: 22px;
+        font-weight: 800;
+      }
+      .message {
+        padding: 12px;
+        border-radius: 10px;
+        font-weight: 700;
+        text-align: center;
+      }
+      .correct {
+        background: linear-gradient(90deg, #dff7e6, #7ddc8a);
+        color: #064e2d;
+      }
+      .wrong {
+        background: linear-gradient(90deg, #ffdede, #ff7a7a);
+        color: #6b0f0f;
+      }
+      footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .confetti {
+        pointer-events: none;
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: 999;
+      }
+      .confetti span {
+        position: absolute;
+        font-size: 20px;
+        animation: fall linear forwards;
+      }
+      @keyframes fall {
+        to {
+          transform: translateY(110vh) rotate(720deg);
+          opacity: 0.1;
+        }
+      }
+      .controls .switch {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .muted-small {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      @media (max-width: 768px) {
+        body {
+          -webkit-text-size-adjust: 100%; /* Prevent font scaling on iOS */
+        }
+        .wrap {
+          margin: 0;
+          padding: 8px;
+          border-radius: 0;
+        }
+        .card {
+          padding: 12px;
+        }
+        header {
+          flex-direction: column;
+          gap: 16px;
+          text-align: center;
+        }
+        .brand {
+          flex-direction: column;
+          gap: 8px;
+        }
+        .logo {
+          width: 54px;
+          height: 54px;
+          font-size: 20px;
+        }
+        h1 {
+          font-size: 18px;
+        }
+        header .sub {
+          display: none; /* Too long for mobile header */
+        }
+        .question-box {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 16px;
+        }
+        .qleft {
+          align-items: center;
+        }
+        .problem {
+          font-size: 22px;
+          text-align: center;
+          line-height: 1.3;
+        }
+        .timer {
+          min-width: 0;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .timer > div {
+          text-align: center !important;
+        }
+        .progress {
+          width: 100%;
+        }
+        .options {
+          grid-template-columns: 1fr;
+        }
+        .submit-row {
+          flex-direction: column-reverse; /* Scores first */
+          align-items: stretch;
+          gap: 12px;
+        }
+        .scoreboard {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          width: 100%;
+          gap: 8px;
+        }
+        .score-pill {
+          min-width: 0;
+        }
+        .submit-row > div:first-child {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+          width: 100%;
+        }
+        .card.row {
+          flex-direction: column;
+          align-items: flex-start !important;
+          gap: 16px;
+        }
+        footer {
+          text-align: center;
+          padding: 12px;
+        }
+        .modal-content {
+          margin: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="startModal" class="modal-overlay">
+      <div class="modal-content card">
+        <div class="logo">M⚔️B</div>
+        <h1>Math Quiz Battle</h1>
+        <div class="sub">Fast, fun math quiz questions — 30s per question</div>
+        <button id="modalStartBtn" class="btn">Start Game</button>
+      </div>
+    </div>
+    <div class="wrap blur-bg">
+      <header class="card">
+        <div class="brand">
+          <div class="logo">M⚔️B</div>
+          <div>
+            <h1>Math Quiz Battle</h1>
+            <div class="sub">
+              Fast, fun math for ages 9–12 — 30s per question
+            </div>
+          </div>
+        </div>
+        <div class="controls">
+          <button id="gameRestartBtn" class="btn" style="display: none">
+            Restart Game
+          </button>
+          <button id="restartBtn" class="ghost">Reset High Score</button>
+        </div>
+      </header>
+
+      <section class="card question-area" aria-live="polite">
+        <div class="question-box">
+          <div class="qleft">
+            <div class="row">
+              <div class="type-pill" id="qType">—</div>
+              <div class="small muted-small">
+                Difficulty: <span id="difficulty">Easy </span>
+              </div>
+            </div>
+            <div class="problem" id="problemText">Press Start to play</div>
+            <div class="sub muted-small">
+              Check a box then press <strong>Submit</strong>. You have
+              <strong>30 seconds</strong> per question.
+            </div>
+          </div>
+
+          <div class="timer" style="min-width: 200px">
+            <div style="text-align: right">
+              <div class="small">Time left</div>
+              <div class="big" id="timeLeft">—</div>
+            </div>
+            <div
+              class="progress"
+              role="progressbar"
+              aria-valuemin="0"
+              aria-valuemax="30"
+            >
+              <i id="progressFill" style="width: 100%"></i>
+            </div>
+          </div>
+        </div>
+
+        <div
+          id="options"
+          class="options"
+          aria-live="polite"
+          style="min-height: 120px"
+        >
+          <!-- options inserted here -->
+        </div>
+
+        <div class="submit-row">
+          <div>
+            <button id="submitBtn" class="btn" disabled>Submit ✔️</button>
+            <button id="skipBtn" class="ghost">Skip ⏭</button>
+          </div>
+          <div class="scoreboard">
+            <div class="score-pill">
+              <div class="small">Your Score</div>
+              <div class="big-score" id="playerScore">0</div>
+            </div>
+            <div class="score-pill">
+              <div class="small">High Score</div>
+              <div class="big-score" id="highScore">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="messageArea"></div>
+      </section>
+
+      <section
+        class="card row"
+        style="justify-content: space-between; align-items: center"
+      >
+        <div class="muted-small">
+          Pick types:
+          <label
+            ><input id="mulToggle" type="checkbox" checked />
+            Multiplication</label
+          >
+          &nbsp;
+          <label
+            ><input id="divToggle" type="checkbox" checked /> Division</label
+          >
+          &nbsp;
+          <label
+            ><input id="frcToggle" type="checkbox" checked /> Fractions</label
+          >
+        </div>
+        <div class="muted-small">
+          Difficulty:
+          <select id="difficultySelect">
+            <option value="easy">Easy 6–8 years</option>
+            <option value="medium" selected>Medium 9–12 years</option>
+            <option value="hard">Hard 13–15 years</option>
+          </select>
+        </div>
+      </section>
+
+      <footer class="muted-small card">
+        <div>Made for quick math practice — positive reinforcement only 😊</div>
+      </footer>
+    </div>
+
+    <div class="confetti" id="confetti"></div>
+
+    <script>
+      /*
+ Math Quiz Battle
+ Single-file kid-friendly quiz with checkboxes, timer, and scoreboard.
+*/
+
+      (() => {
+        // DOM
+        const submitBtn = document.getElementById("submitBtn");
+        const skipBtn = document.getElementById("skipBtn");
+        const optionsWrap = document.getElementById("options");
+        const problemText = document.getElementById("problemText");
+        const qType = document.getElementById("qType");
+        const playerScoreEl = document.getElementById("playerScore");
+        const highScoreEl = document.getElementById("highScore");
+        const timeLeftEl = document.getElementById("timeLeft");
+        const progressFill = document.getElementById("progressFill");
+        const messageArea = document.getElementById("messageArea");
+        const restartBtn = document.getElementById("restartBtn");
+        const difficultySelect = document.getElementById("difficultySelect");
+        const mulToggle = document.getElementById("mulToggle");
+        const divToggle = document.getElementById("divToggle");
+        const frcToggle = document.getElementById("frcToggle");
+        const modalStartBtn = document.getElementById("modalStartBtn");
+        const startModal = document.getElementById("startModal");
+        const gameRestartBtn = document.getElementById("gameRestartBtn");
+        const wrap = document.querySelector(".wrap");
+
+        // Game state
+        let timer = null;
+        let timeRemaining = 30;
+        const QUESTION_TIME = 30;
+        let currentQuestion = null;
+        let playerScore = 0;
+        let highScore = Number(localStorage.getItem("mqb_high_score") || 0);
+        highScoreEl.textContent = highScore;
+        let started = false;
+
+        // Utility functions
+        function randInt(min, max) {
+          return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+        function shuffle(arr) {
+          for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+          }
+          return arr;
+        }
+
+        // Fraction helper: represent as {n,d}
+        function gcd(a, b) {
+          a = Math.abs(a);
+          b = Math.abs(b);
+          while (b) {
+            const t = a % b;
+            a = b;
+            b = t;
+          }
+          return a;
+        }
+        function simplify(fr) {
+          const g = gcd(fr.n, fr.d);
+          return { n: fr.n / g, d: fr.d / g };
+        }
+        function fracToStr(fr) {
+          const s = simplify(fr);
+          if (s.d === 1) return String(s.n);
+          if (Math.abs(s.n) > s.d && s.n !== 0) {
+            const whole = Math.trunc(s.n / s.d);
+            const rem = Math.abs(s.n % s.d);
+            return `${whole} ${rem}/${s.d}`;
+          }
+          return `${s.n}/${s.d}`;
+        }
+        function addFrac(a, b) {
+          const n = a.n * b.d + b.n * a.d;
+          const d = a.d * b.d;
+          return simplify({ n, d });
+        }
+        function mulFrac(a, b) {
+          return simplify({ n: a.n * b.n, d: a.d * b.d });
+        }
+
+        // Create question
+        function generateQuestion() {
+          // pick types allowed
+          const allowed = [];
+          if (mulToggle.checked) allowed.push("multiplication");
+          if (divToggle.checked) allowed.push("division");
+          if (frcToggle.checked) allowed.push("fractions");
+          if (allowed.length === 0) allowed.push("multiplication"); // fallback
+
+          const type = allowed[randInt(0, allowed.length - 1)];
+          const difficulty = difficultySelect.value;
+          qType.textContent = type.replace(/^\w/, (c) => c.toUpperCase());
+          let question = {
+            type,
+            text: "",
+            correct: null,
+            options: [],
+            explanation: "",
+          };
+
+          // difficulty parameters
+          let mulRange, divRange, fracDenMax;
+          if (difficulty === "easy") {
+            mulRange = [2, 8];
+            divRange = [2, 8];
+            fracDenMax = 6;
+          } else if (difficulty === "medium") {
+            mulRange = [6, 12];
+            divRange = [2, 12];
+            fracDenMax = 8;
+          } else {
+            mulRange = [8, 18];
+            divRange = [4, 20];
+            fracDenMax = 12;
+          }
+
+          if (type === "multiplication") {
+            const a = randInt(mulRange[0], mulRange[1]);
+            const b = randInt(mulRange[0], mulRange[1]);
+            question.text = `${a} × ${b} = ?`;
+            question.correct = a * b;
+            // produce options
+            const opts = new Set([question.correct]);
+            while (opts.size < 4) {
+              // distractors: +/- small multiples or swapped factors
+              let candidate = question.correct + randInt(-5, 7);
+              if (randInt(0, 1)) candidate = a * (b + randInt(-3, 3));
+              if (candidate <= 0)
+                candidate = Math.abs(candidate) + randInt(1, 6);
+              opts.add(candidate);
+            }
+            question.options = shuffle(Array.from(opts));
+            question.explanation = `${a} × ${b} = ${question.correct}`;
+          } else if (type === "division") {
+            // ensure divisible
+            const b = randInt(divRange[0], divRange[1]);
+            const q = randInt(divRange[0], Math.max(divRange[1], b + 2));
+            const a = q * b; // divisible
+            question.text = `${a} ÷ ${b} = ?`;
+            question.correct = q;
+            const opts = new Set([q]);
+            while (opts.size < 4) {
+              let delta = randInt(1, 5);
+              let candidate = q + (randInt(0, 1) ? delta : -delta);
+              if (candidate <= 0) candidate = q + randInt(1, 4);
+              opts.add(candidate);
+            }
+            question.options = shuffle(Array.from(opts));
+            question.explanation = `${a} ÷ ${b} = ${q}`;
+          } else if (type === "fractions") {
+            // choose sub-type: add or multiply
+            const subtype = randInt(0, 1) ? "add" : "multiply";
+            const d1 = randInt(2, fracDenMax);
+            const d2 = randInt(2, fracDenMax);
+            let n1 = randInt(1, Math.max(1, d1 - 1));
+            let n2 = randInt(1, Math.max(1, d2 - 1));
+            // Make fractions simpler for kids: keep small numbers
+            if (subtype === "add") {
+              question.text = `${n1}/${d1} + ${n2}/${d2} = ? (simplify)`;
+              const sum = addFrac({ n: n1, d: d1 }, { n: n2, d: d2 });
+              question.correct = `${sum.n}/${sum.d}`;
+              // create distractors as near fractions
+              const opts = new Set([question.correct]);
+              while (opts.size < 4) {
+                // tweak numerator or denominator slightly
+                let s = addFrac(
+                  { n: n1 + randInt(-1, 1), d: d1 },
+                  { n: n2 + randInt(-1, 1), d: d2 }
+                );
+                // sometimes use improper or reduced wrong answers
+                const cand = `${s.n}/${s.d}`;
+                if (!cand.includes("NaN")) opts.add(cand);
+              }
+              question.options = shuffle(Array.from(opts));
+              question.explanation = `${fracToStr({
+                n: n1,
+                d: d1,
+              })} + ${fracToStr({ n: n2, d: d2 })} = ${fracToStr(sum)}`;
+            } else {
+              // multiply
+              question.text = `${n1}/${d1} × ${n2}/${d2} = ? (simplify)`;
+              const prod = mulFrac({ n: n1, d: d1 }, { n: n2, d: d2 });
+              question.correct = `${prod.n}/${prod.d}`;
+              const opts = new Set([question.correct]);
+              while (opts.size < 4) {
+                let p = mulFrac(
+                  { n: n1 + randInt(-1, 1), d: d1 },
+                  { n: n2 + randInt(-1, 1), d: d2 }
+                );
+                const cand = `${Math.max(1, p.n)}/${Math.max(1, p.d)}`;
+                opts.add(cand);
+              }
+              question.options = shuffle(Array.from(opts));
+              question.explanation = `${fracToStr({
+                n: n1,
+                d: d1,
+              })} × ${fracToStr({ n: n2, d: d2 })} = ${fracToStr(prod)}`;
+            }
+          }
+
+          return question;
+        }
+
+        function renderQuestion(q) {
+          // Clear message
+          messageArea.innerHTML = "";
+          // Render text
+          problemText.textContent = q.text;
+          // Render options as checkboxes
+          optionsWrap.innerHTML = "";
+          q.options.forEach((opt, idx) => {
+            const id = `opt_${idx}`;
+            const optEl = document.createElement("label");
+            optEl.className = "option";
+            optEl.setAttribute("role", "group");
+            optEl.innerHTML = `<input type="checkbox" name="answer" id="${id}" value="${opt}" />
+                         <div style="font-weight:700">${opt}</div>
+                         <div style="flex:1;color:var(--muted);text-align:right">${
+                           typeof opt === "string" && opt.includes("/")
+                             ? "fraction"
+                             : ""
+                         }</div>`;
+            // click to check only this
+            optEl.addEventListener("click", (e) => {
+              const cb = optEl.querySelector("input");
+
+              // If the click was on the label area (but not the input),
+              // we manually toggle the checkbox state.
+              if (e.target.tagName !== "INPUT") {
+                cb.checked = !cb.checked;
+              }
+
+              // Now, ensure only the clicked checkbox is checked.
+              const inputs = optionsWrap.querySelectorAll(
+                "input[type=checkbox]"
+              );
+              inputs.forEach((i) => {
+                if (i !== cb) i.checked = false;
+              });
+
+              updateSubmitState();
+            });
+            optionsWrap.appendChild(optEl);
+          });
+          // Enable submit
+          submitBtn.disabled = false;
+          // reset time
+          resetTimer();
+          startTimer();
+          // set ARIA
+          progressFill.parentElement.setAttribute(
+            "aria-valuenow",
+            QUESTION_TIME
+          );
+        }
+
+        function updateSubmitState() {
+          const any =
+            optionsWrap.querySelectorAll("input[type=checkbox]:checked")
+              .length > 0;
+          submitBtn.disabled = !any;
+        }
+
+        function startTimer() {
+          clearInterval(timer);
+          timeRemaining = QUESTION_TIME;
+          timeLeftEl.textContent = timeRemaining;
+          progressFill.style.width = "100%";
+          progressFill.parentElement.setAttribute(
+            "aria-valuenow",
+            timeRemaining
+          );
+          timer = setInterval(() => {
+            timeRemaining -= 1;
+            timeLeftEl.textContent = timeRemaining;
+            const pct = Math.max(0, (timeRemaining / QUESTION_TIME) * 100);
+            progressFill.style.width = pct + "%";
+            progressFill.parentElement.setAttribute(
+              "aria-valuenow",
+              timeRemaining
+            );
+            if (timeRemaining <= 0) {
+              clearInterval(timer);
+              handleTimeout();
+            }
+          }, 1000);
+        }
+
+        function resetTimer() {
+          clearInterval(timer);
+        }
+
+        function handleTimeout() {
+          // treat as incorrect
+          submitBtn.disabled = true;
+          showResult(
+            false,
+            "Time ran out! " +
+              (currentQuestion.explanation ? currentQuestion.explanation : "")
+          );
+          // advance after short delay
+          setTimeout(nextQuestion, 1500);
+        }
+
+        function showResult(correct, explanation) {
+          // Stop the timer so it pauses
+          resetTimer();
+
+          let msgClass = correct ? "correct" : "wrong";
+          let msgText = correct
+            ? `🎉 Right! ${explanation || ""}`
+            : `😕 Oops! ${explanation || ""}`;
+
+          messageArea.innerHTML = `
+    <div class="message ${msgClass}">
+      ${msgText}
+      <br/><br/>
+      <button id="nextBtn" class="btn">Next ➡️</button>
+    </div>
+  `;
+
+          // Confetti if correct
+          if (correct) spawnConfetti();
+
+          // Attach event for Next button
+          document.getElementById("nextBtn").addEventListener("click", () => {
+            nextQuestion(); // Load new question
+          });
+        }
+
+        function checkAnswerAndProceed() {
+          const sel = optionsWrap.querySelector("input[type=checkbox]:checked");
+          if (!sel) return;
+          const val = sel.value;
+          resetTimer();
+          submitBtn.disabled = true;
+
+          let correct = false;
+          if (typeof currentQuestion.correct === "number") {
+            correct = Number(val) === currentQuestion.correct;
+          } else {
+            const normalize = (s) => {
+              s = s.trim();
+              if (/\d+\s+\d+\/\d+/.test(s)) {
+                const parts = s.split(" ");
+                const whole = Number(parts[0]);
+                const [n, d] = parts[1].split("/").map(Number);
+                return `${whole * d + n}/${d}`;
+              }
+              if (/^\d+$/.test(s)) return s + "/1";
+              return s;
+            };
+            const a = normalize(String(currentQuestion.correct));
+            const b = normalize(String(val));
+            const parseFrac = (str) => {
+              if (str.includes("/")) {
+                const [n, d] = str.split("/").map(Number);
+                const g = gcd(n, d);
+                return `${n / g}/${d / g}`;
+              } else {
+                const n = Number(str);
+                return `${n}/1`;
+              }
+            };
+            correct = parseFrac(a) === parseFrac(b);
+          }
+
+          if (correct) {
+            playerScore++;
+            playerScoreEl.textContent = playerScore;
+            if (playerScore > highScore) {
+              highScore = playerScore;
+              highScoreEl.textContent = highScore;
+              localStorage.setItem("mqb_high_score", String(highScore));
+            }
+            showResult(true, currentQuestion.explanation);
+          } else {
+            showResult(
+              false,
+              "Answer: " +
+                (currentQuestion.explanation || currentQuestion.correct)
+            );
+          }
+
+          // ❌ remove auto move:
+          // setTimeout(nextQuestion, 1400);
+        }
+
+        function nextQuestion() {
+          // new question
+          currentQuestion = generateQuestion();
+          renderQuestion(currentQuestion);
+        }
+
+        function startGame() {
+          startModal.style.display = "none";
+          wrap.classList.remove("blur-bg");
+
+          started = true;
+          playerScore = 0;
+          playerScoreEl.textContent = playerScore;
+          gameRestartBtn.style.display = "inline-block";
+          nextQuestion();
+        }
+
+        // confetti: playful emoji falling
+        function spawnConfetti() {
+          const wrap = document.getElementById("confetti");
+          const emojis = ["🎉", "✨", "🎈", "🌟", "🥳", "🍭"];
+          for (let i = 0; i < 18; i++) {
+            const s = document.createElement("span");
+            s.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            const left = Math.random() * 100;
+            s.style.left = left + "vw";
+            s.style.top = -Math.random() * 10 - 5 + "vh";
+            s.style.transform = `rotate(${randInt(0, 360)}deg)`;
+            s.style.animationDuration = 4 + Math.random() * 2 + "s";
+            s.style.fontSize = 14 + Math.random() * 18 + "px";
+            wrap.appendChild(s);
+            // cleanup
+            setTimeout(() => {
+              s.remove();
+            }, 7000);
+          }
+        }
+
+        // event listeners
+        modalStartBtn.addEventListener("click", () => {
+          startGame();
+        });
+
+        gameRestartBtn.addEventListener("click", () => {
+          startGame();
+        });
+
+        submitBtn.addEventListener("click", () => {
+          checkAnswerAndProceed();
+        });
+
+        skipBtn.addEventListener("click", () => {
+          // treat as wrong skip
+          resetTimer();
+          showResult(false, "Skipped. " + (currentQuestion.explanation || ""));
+          setTimeout(nextQuestion, 900);
+        });
+
+        // ensure only one checkbox selectable if user toggles with keyboard
+        document.addEventListener("change", (e) => {
+          if (
+            e.target &&
+            e.target.matches("input[type=checkbox][name=answer]")
+          ) {
+            const inputs = optionsWrap.querySelectorAll("input[type=checkbox]");
+            inputs.forEach((i) => {
+              if (i !== e.target) i.checked = false;
+            });
+            updateSubmitState();
+          }
+        });
+
+        // reset high score
+        restartBtn.addEventListener("click", () => {
+          if (confirm("Reset saved high score?")) {
+            highScore = 0;
+            localStorage.setItem("mqb_high_score", "0");
+            highScoreEl.textContent = "0";
+            alert("High score reset.");
+          }
+        });
+
+        // keyboard support: Enter to submit
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" && !submitBtn.disabled) {
+            submitBtn.click();
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

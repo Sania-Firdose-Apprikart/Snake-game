@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapMaster: India Explorer</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Comic Sans MS", cursive, sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, #e0f7fa, #bbdefb);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 20px;
+        padding: 15px;
+        background: linear-gradient(45deg, #ff6f00, #ffca28);
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        color: #fff;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        margin-bottom: 5px;
+      }
+
+      .subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+      }
+
+      .game-area {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      .map-container {
+        flex: 1;
+        min-width: 300px;
+        background-color: #fff;
+        border-radius: 15px;
+        padding: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .map-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .map-selector {
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 2px solid #ff9800;
+        background-color: #fff;
+        font-weight: bold;
+        color: #ff6f00;
+        cursor: pointer;
+      }
+
+      .map-display {
+        flex: 1;
+        background-color: #ffffff;
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+        min-height: 400px;
+        display: flex;
+      }
+
+      .map-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+
+      .states-container {
+        flex: 1;
+        min-width: 300px;
+        background-color: #fff;
+        border-radius: 15px;
+        padding: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .states-header {
+        margin-bottom: 15px;
+        text-align: center;
+        color: #ff6f00;
+        font-size: 1.5rem;
+      }
+
+      .states-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 10px;
+      }
+
+      .state-item {
+        padding: 10px;
+        background: linear-gradient(45deg, #4fc3f7, #29b6f6);
+        border-radius: 8px;
+        color: white;
+        font-weight: bold;
+        cursor: grab;
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+        transition: transform 0.2s, box-shadow 0.2s;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .state-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      .state-item.dragging {
+        opacity: 0.7;
+      }
+
+      .state-item.placed {
+        cursor: default;
+        opacity: 0.6;
+        background: linear-gradient(45deg, #9e9e9e, #757575);
+      }
+
+      .status-indicator {
+        flex-shrink: 0;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background-color: #fff;
+        border: 2px solid #ccc;
+        transition: background-color 0.3s, border-color 0.3s;
+      }
+
+      .status-indicator.correct {
+        background-color: #4caf50;
+        border-color: #388e3c;
+      }
+
+      .status-indicator.incorrect {
+        background-color: #f44336;
+        border-color: #d32f2f;
+        animation: shake-indicator 0.5s;
+      }
+
+      @keyframes shake-indicator {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.2);
+        }
+      }
+
+      .game-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(65deg, orange, #4caf50);
+        border-radius: 15px;
+        padding: 15px;
+        color: white;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        margin-bottom: 20px;
+      }
+
+      .game-info.karnataka-score {
+        background: linear-gradient(45deg, yellow, red);
+      }
+
+      .progress-bar {
+        flex: 1;
+        height: 20px;
+        background-color: #e0e0e0;
+        border-radius: 10px;
+        margin: 0 15px;
+        overflow: hidden;
+      }
+
+      .progress {
+        height: 100%;
+        background: linear-gradient(45deg, #ffeb3b, #ffc107);
+        border-radius: 10px;
+        width: 0%;
+        transition: width 0.5s;
+      }
+
+      .game-controls {
+        display: flex;
+        gap: 10px;
+      }
+
+      button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(45deg, #ff6f00, #ff9800);
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      .state-slot {
+        position: absolute;
+        border: 2px dashed #000;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(0, 150, 255, 0.1);
+        transition: all 0.3s;
+        pointer-events: all;
+      }
+
+      .state-slot:hover {
+        border-color: #ccc;
+      }
+
+      .state-slot.correct {
+        border: 2px solid #4caf50;
+        background-color: rgba(76, 175, 80, 0.2);
+        box-shadow: 0 0 15px rgba(76, 175, 80, 0.7);
+      }
+
+      .state-slot.incorrect {
+        border: 2px solid #f44336;
+        background-color: rgba(244, 67, 54, 0.2);
+        animation: shake 0.5s;
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-5px);
+        }
+        75% {
+          transform: translateX(5px);
+        }
+      }
+
+      .state-placed {
+        position: absolute;
+        padding: 5px 10px;
+        background: linear-gradient(45deg, #4fc3f7, #29b6f6);
+        border-radius: 8px;
+        color: rgb(230, 5, 238);
+        font-weight: bold;
+        text-align: center;
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+        z-index: 10;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+      }
+
+      .state-placed.correct {
+        box-shadow: 0 0 20px rgba(76, 175, 80, 0.8);
+      }
+
+      .completion-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s;
+      }
+
+      .completion-screen.active {
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      .completion-content {
+        background: linear-gradient(45deg, #ff6f00, #ffca28);
+        border-radius: 20px;
+        padding: 30px;
+        text-align: center;
+        color: white;
+        max-width: 500px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        transform: scale(0.7);
+        transition: transform 0.5s;
+      }
+
+      .completion-screen.active .completion-content {
+        transform: scale(1);
+      }
+
+      .completion-content h2 {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .completion-content p {
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+      }
+
+      .tricolor-flag {
+        width: 300px;
+        height: 200px;
+        margin: 20px auto;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        position: relative;
+        display: none;
+      }
+
+      .tricolor-flag.active {
+        display: block;
+      }
+
+      .saffron {
+        height: 33.33%;
+        background-color: #ff9933;
+      }
+
+      .white {
+        height: 33.33%;
+        background-color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .green {
+        height: 33.33%;
+        background-color: #138808;
+      }
+
+      .chakra {
+        width: 50px;
+        height: 50px;
+        border: 2px solid #000080;
+        border-radius: 50%;
+        position: relative;
+      }
+
+      .chakra::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 10px;
+        height: 10px;
+        background-color: #000080;
+        border-radius: 50%;
+      }
+
+      .spoke {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 2px;
+        height: 50px;
+        background-color: #000080;
+        transform: translate(-50%, -50%) rotate(0deg);
+      }
+
+      .karnataka-flag {
+        width: 300px;
+        height: 200px;
+        margin: 20px auto;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        position: relative;
+        display: none;
+        background: linear-gradient(to bottom, yellow 50%, red 50%);
+      }
+
+      .karnataka-flag.active {
+        display: block;
+      }
+
+      .map {
+        display: none;
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
+
+      .map.active {
+        display: block;
+      }
+
+      .game-area.karnataka-map-active {
+        align-items: flex-start;
+      }
+      .game-area.karnataka-map-active .map-container {
+        flex: 3 1 0%;
+      }
+      .game-area.karnataka-map-active .states-container {
+        flex: 1 1 0%;
+        max-height: 600px;
+      }
+      .game-area.karnataka-map-active .map-display {
+        min-height: 550px;
+      }
+      .game-area.karnataka-map-active .states-list {
+        max-height: 520px;
+      }
+
+      @media (max-width: 992px) {
+        .game-area {
+          flex-direction: column;
+        }
+        .states-container {
+          flex: none;
+          width: 100%;
+        }
+        .states-list {
+          display: flex;
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          overflow-y: hidden;
+          max-height: none;
+          grid-template-columns: none;
+          padding: 10px 0;
+        }
+        .state-item {
+          flex-shrink: 0;
+          width: 160px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        body {
+          padding: 10px;
+        }
+        h1 {
+          font-size: 2rem;
+        }
+        .subtitle {
+          font-size: 1rem;
+        }
+        .game-info {
+          flex-direction: column;
+          gap: 15px;
+          align-items: stretch;
+        }
+        .game-controls {
+          justify-content: center;
+        }
+        .map-header {
+          flex-direction: column;
+          gap: 10px;
+        }
+      }
+
+      @media (max-width: 576px) {
+        .state-item {
+          padding: 8px;
+          font-size: 0.9rem;
+          gap: 5px;
+          width: 140px;
+        }
+        .status-indicator {
+          width: 14px;
+          height: 14px;
+        }
+        button {
+          padding: 8px 15px;
+          font-size: 0.9rem;
+        }
+        .completion-content {
+          padding: 20px;
+          margin: 10px;
+        }
+        .completion-content h2 {
+          font-size: 2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1 id="header-title">MapMaster: India Explorer</h1>
+        <p id="header-subtitle" class="subtitle">Learn Indian geography through interactive play!</p>
+      </header>
+
+      <div class="game-info" id="game-info">
+        <div class="score">Score: <span id="score">0</span></div>
+        <div class="progress-bar">
+          <div class="progress" id="progress"></div>
+        </div>
+        <div class="game-controls">
+          <button id="reset-btn">Reset Game</button>
+          <button id="hint-btn">Get Hint</button>
+        </div>
+      </div>
+
+      <div class="game-area" id="game-area">
+        <div class="states-container">
+          <h2 class="states-header">Indian States</h2>
+          <div class="states-list" id="states-list"></div>
+        </div>
+
+        <div class="map-container">
+          <div class="map-header">
+            <h2>Map of India</h2>
+            <select class="map-selector" id="map-selector">
+              <option value="india">India Map</option>
+              <option value="karnataka">Karnataka Map</option>
+            </select>
+          </div>
+          <div class="map-display" id="map-display">
+            <div id="india-map" class="map active">
+              <img src="images/indian-map.webp" alt="India Map" class="map-image" />
+            </div>
+            <div id="karnataka-map" class="map">
+              <img src="images/map-of-karnataka.jpg" alt="Karnataka Map" class="map-image" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="completion-screen" id="completion-screen">
+      <div class="completion-content">
+        <h2>Congratulations!</h2>
+        <p id="completion-message">You've successfully placed all the states & UTs on the map!</p>
+        <div class="tricolor-flag" id="india-flag">
+          <div class="saffron"></div>
+          <div class="white">
+            <div class="chakra" id="chakra"></div>
+          </div>
+          <div class="green"></div>
+        </div>
+        <div class="karnataka-flag" id="karnataka-flag"></div>
+        <p>Your final score: <span id="final-score">0</span></p>
+        <button id="play-again-btn">Play Again</button>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const BASE_DIMENSIONS = { width: 600, height: 600 };
+
+        const gameData = {
+          india: {
+            name: "India",
+            image: "images/indian-map.webp",
+            items: [
+              { id: "ap", name: "Andhra Pradesh", x: 215, y: 425, width: 40, height: 40 },
+              { id: "ar", name: "Arunachal Pradesh", x: 530, y: 150, width: 30, height: 30 },
+              { id: "as", name: "Assam", x: 460, y: 200, width: 20, height: 20 },
+              { id: "br", name: "Bihar", x: 350, y: 210, width: 30, height: 30 },
+              { id: "cg", name: "Chhattisgarh", x: 290, y: 300, width: 30, height: 30 },
+              { id: "ga", name: "Goa", x: 115, y: 430, width: 20, height: 20 },
+              { id: "gj", name: "Gujarat", x: 60, y: 250, width: 40, height: 40 },
+              { id: "hr", name: "Haryana", x: 165, y: 150, width: 20, height: 20 },
+              { id: "hp", name: "Himachal Pradesh", x: 190, y: 80, width: 30, height: 30 },
+              { id: "jh", name: "Jharkhand", x: 340, y: 250, width: 30, height: 30 },
+              { id: "ka", name: "Karnataka", x: 140, y: 460, width: 40, height: 40 },
+              { id: "kl", name: "Kerala", x: 160, y: 550, width: 30, height: 30 },
+              { id: "mp", name: "Madhya Pradesh", x: 210, y: 260, width: 40, height: 40 },
+              { id: "mh", name: "Maharashtra", x: 190, y: 325, width: 40, height: 40 },
+              { id: "mn", name: "Manipur", x: 530, y: 230, width: 20, height: 20 },
+              { id: "ml", name: "Meghalaya", x: 450, y: 220, width: 20, height: 20 },
+              { id: "mz", name: "Mizoram", x: 510, y: 280, width: 20, height: 20 },
+              { id: "nl", name: "Nagaland", x: 540, y: 200, width: 20, height: 20 },
+              { id: "or", name: "Odisha", x: 340, y: 330, width: 30, height: 30 },
+              { id: "pb", name: "Punjab", x: 140, y: 110, width: 20, height: 20 },
+              { id: "rj", name: "Rajasthan", x: 110, y: 200, width: 40, height: 40 },
+              { id: "sk", name: "Sikkim", x: 415, y: 180, width: 20, height: 20 },
+              { id: "tn", name: "Tamil Nadu", x: 200, y: 520, width: 30, height: 30 },
+              { id: "ts", name: "Telangana", x: 220, y: 370, width: 30, height: 30 },
+              { id: "tr", name: "Tripura", x: 485, y: 255, width: 20, height: 20 },
+              { id: "up", name: "Uttar Pradesh", x: 240, y: 180, width: 40, height: 40 },
+              { id: "uk", name: "Uttarakhand", x: 245, y: 135, width: 30, height: 30 },
+              { id: "wb", name: "West Bengal", x: 410, y: 270, width: 30, height: 30 },
+              { id: "an", name: "Andaman & Nicobar", x: 470, y: 480, width: 40, height: 40 },
+              { id: "ch", name: "Chandigarh", x: 180, y: 125, width: 20, height: 20 },
+              { id: "dn", name: "Dadra & Nagar Haveli", x: 100, y: 325, width: 20, height: 20 },
+              { id: "dl", name: "Delhi", x: 195, y: 170, width: 20, height: 20 },
+              { id: "jk", name: "Jammu & Kashmir", x: 130, y: 50, width: 30, height: 30 },
+              { id: "la", name: "Ladakh", x: 190, y: 30, width: 40, height: 40 },
+              { id: "ld", name: "Lakshadweep", x: 50, y: 490, width: 40, height: 40 },
+              { id: "py", name: "Puducherry", x: 230, y: 485, width: 30, height: 30 },
+            ],
+          },
+          karnataka: {
+            name: "Karnataka",
+            image: "images/map-of-karnataka.jpg",
+            items: [
+              { id: "bagalkote", name: "Bagalkote", x: 170, y: 165, width: 30, height: 30 },
+              { id: "ballari", name: "Ballari", x: 270, y: 280, width: 30, height: 30 },
+              { id: "belagavi", name: "Belagavi", x: 100, y: 180, width: 30, height: 30 },
+              { id: "bengaluru_rural", name: "Bengaluru Rural", x: 420, y: 430, width: 20, height: 20 },
+              { id: "bengaluru_urban", name: "Bengaluru Urban", x: 440, y: 460, width: 20, height: 20 },
+              { id: "bidar", name: "Bidar", x: 400, y: 20, width: 30, height: 30 },
+              { id: "chamarajanagar", name: "Chamarajanagar", x: 360, y: 540, width: 20, height: 20 },
+              { id: "chikkaballapur", name: "Chikkaballapur", x: 460, y: 400, width: 20, height: 20 },
+              { id: "chikkamagaluru", name: "Chikkamagaluru", x: 180, y: 420, width: 20, height: 20 },
+              { id: "chitradurga", name: "Chitradurga", x: 280, y: 360, width: 20, height: 20 },
+              { id: "dakshina_kannada", name: "Dakshina Kannada", x: 160, y: 460, width: 20, height: 20 },
+              { id: "davanagere", name: "Davanagere", x: 230, y: 340, width: 20, height: 20 },
+              { id: "dharwad", name: "Dharwad", x: 120, y: 250, width: 20, height: 20 },
+              { id: "gadag", name: "Gadag", x: 200, y: 250, width: 20, height: 20 },
+              { id: "hassan", name: "Hassan", x: 250, y: 440, width: 20, height: 20 },
+              { id: "haveri", name: "Haveri", x: 150, y: 300, width: 20, height: 20 },
+              { id: "kalaburagi", name: "Kalaburagi", x: 360, y: 80, width: 30, height: 30 },
+              { id: "kodagu", name: "Kodagu", x: 190, y: 500, width: 20, height: 20 },
+              { id: "kolar", name: "Kolar", x: 520, y: 430, width: 20, height: 20 },
+              { id: "koppal", name: "Koppal", x: 270, y: 230, width: 30, height: 30 },
+              { id: "mandya", name: "Mandya", x: 320, y: 480, width: 20, height: 20 },
+              { id: "mysuru", name: "Mysuru", x: 270, y: 510, width: 20, height: 20 },
+              { id: "raichur", name: "Raichur", x: 340, y: 190, width: 30, height: 30 },
+              { id: "ramanagara", name: "Ramanagara", x: 400, y: 490, width: 20, height: 20 },
+              { id: "shivamogga", name: "Shivamogga", x: 130, y: 350, width: 30, height: 30 },
+              { id: "tumakuru", name: "Tumakuru", x: 320, y: 420, width: 20, height: 20 },
+              { id: "udupi", name: "Udupi", x: 90, y: 400, width: 20, height: 20 },
+              { id: "uttara_kannada", name: "Uttara Kannada", x: 70, y: 280, width: 30, height: 30 },
+              { id: "vijayapura", name: "Vijayapura", x: 240, y: 110, width: 30, height: 30 },
+              { id: "yadgir", name: "Yadgir", x: 320, y: 145, width: 30, height: 30 },
+            ],
+          },
+        };
+
+        let score = 0;
+        let placedItems = 0;
+        let totalItems = 0;
+        let currentMapId = "india";
+
+        const gameArea = document.getElementById("game-area");
+        const mapDisplay = document.getElementById("map-display");
+        const statesList = document.getElementById("states-list");
+        const scoreElement = document.getElementById("score");
+        const progressElement = document.getElementById("progress");
+        const resetButton = document.getElementById("reset-btn");
+        const hintButton = document.getElementById("hint-btn");
+        const mapSelector = document.getElementById("map-selector");
+        const completionScreen = document.getElementById("completion-screen");
+        const completionMessage = document.getElementById("completion-message");
+        const finalScoreElement = document.getElementById("final-score");
+        const playAgainButton = document.getElementById("play-again-btn");
+        const chakraElement = document.getElementById("chakra");
+        const indiaFlag = document.getElementById("india-flag");
+        const karnatakaFlag = document.getElementById("karnataka-flag");
+        const indiaMapImg = document.querySelector("#india-map .map-image");
+        const karnatakaMapImg = document.querySelector("#karnataka-map .map-image");
+        const mapTitle = document.querySelector(".map-header h2");
+        const statesHeader = document.querySelector(".states-header");
+        const headerTitle = document.getElementById("header-title");
+        const headerSubtitle = document.getElementById("header-subtitle");
+        const gameInfo = document.getElementById("game-info");
+
+        function initGame(mapId = "india") {
+          score = 0;
+          placedItems = 0;
+          currentMapId = mapId;
+
+          const currentMapData = gameData[currentMapId];
+          totalItems = currentMapData.items.length;
+
+          updateScore();
+          updateProgress();
+
+          mapDisplay.querySelectorAll(".state-slot, .state-placed").forEach((el) => el.remove());
+          statesList.innerHTML = "";
+
+          showMap(currentMapId);
+
+          currentMapData.items.forEach((item) => {
+            createStateSlot(item);
+            createStateListItem(item);
+          });
+
+          completionScreen.classList.remove("active");
+        }
+
+        function showMap(mapId) {
+          const mapData = gameData[mapId];
+          mapTitle.textContent = `Map of ${mapData.name}`;
+          statesHeader.textContent = `${mapData.name} ${mapId === "india" ? "States & UTs" : "Districts"}`;
+
+          // Update header title and subtitle
+          headerTitle.textContent = mapId === "india" ? "MapMaster: India Explorer" : "MapMaster: Karnataka Quest";
+          headerSubtitle.textContent = mapId === "india" ? "Learn Indian geography through interactive play!" : "Explore Karnataka's districts interactively!";
+
+          // Update scoreboard background
+          gameInfo.classList.toggle("karnataka-score", mapId === "karnataka");
+
+          gameArea.classList.toggle("karnataka-map-active", mapId === "karnataka");
+
+          const indiaMapContainer = document.getElementById("india-map");
+          const karnatakaMapContainer = document.getElementById("karnataka-map");
+
+          if (mapId === "india") {
+            indiaMapContainer.classList.add("active");
+            karnatakaMapContainer.classList.remove("active");
+            indiaMapImg.src = mapData.image;
+          } else {
+            indiaMapContainer.classList.remove("active");
+            karnatakaMapContainer.classList.add("active");
+            karnatakaMapImg.src = mapData.image;
+          }
+        }
+
+        function createStateSlot(item) {
+          const slot = document.createElement("div");
+          slot.className = "state-slot";
+          slot.style.left = (item.x / BASE_DIMENSIONS.width) * 100 + "%";
+          slot.style.top = (item.y / BASE_DIMENSIONS.height) * 100 + "%";
+          slot.style.width = (item.width / BASE_DIMENSIONS.width) * 100 + "%";
+          slot.style.height = (item.height / BASE_DIMENSIONS.height) * 100 + "%";
+          slot.setAttribute("data-id", item.id);
+          mapDisplay.appendChild(slot);
+        }
+
+        function createStateListItem(item) {
+          const itemElement = document.createElement("div");
+          itemElement.className = "state-item";
+          itemElement.setAttribute("data-id", item.id);
+          itemElement.draggable = true;
+
+          const indicator = document.createElement("span");
+          indicator.className = "status-indicator";
+
+          const name = document.createElement("span");
+          name.textContent = item.name;
+
+          itemElement.appendChild(indicator);
+          itemElement.appendChild(name);
+
+          itemElement.addEventListener("dragstart", handleDragStart);
+          statesList.appendChild(itemElement);
+        }
+
+        function handleDragStart(e) {
+          if (e.target.classList.contains("placed")) {
+            e.preventDefault();
+            return;
+          }
+          e.dataTransfer.setData("text/plain", e.target.getAttribute("data-id"));
+          e.target.classList.add("dragging");
+        }
+
+        mapDisplay.addEventListener("dragover", (e) => e.preventDefault());
+
+        mapDisplay.addEventListener("drop", function (e) {
+          e.preventDefault();
+
+          const itemId = e.dataTransfer.getData("text/plain");
+          const itemElement = document.querySelector(`.state-item[data-id="${itemId}"]`);
+          if (!itemElement) return;
+
+          itemElement.classList.remove("dragging");
+          const indicator = itemElement.querySelector(".status-indicator");
+
+          const targetSlot = document.elementFromPoint(e.clientX, e.clientY);
+
+          if (
+            targetSlot &&
+            targetSlot.classList.contains("state-slot") &&
+            targetSlot.getAttribute("data-id") === itemId
+          ) {
+            targetSlot.classList.add("correct");
+
+            const itemData = gameData[currentMapId].items.find((i) => i.id === itemId);
+            const placedState = document.createElement("div");
+            placedState.className = "state-placed correct";
+            placedState.textContent = itemElement.querySelector("span:last-child").textContent;
+            placedState.style.left = (itemData.x / BASE_DIMENSIONS.width) * 100 + "%";
+            placedState.style.top = (itemData.y / BASE_DIMENSIONS.height) * 100 + "%";
+            placedState.style.width = (itemData.width / BASE_DIMENSIONS.width) * 100 + "%";
+            placedState.style.height = (itemData.height / BASE_DIMENSIONS.height) * 100 + "%";
+            mapDisplay.appendChild(placedState);
+
+            itemElement.classList.add("placed");
+            itemElement.draggable = false;
+            indicator.classList.add("correct");
+
+            score += 10;
+            placedItems++;
+
+            updateScore();
+            updateProgress();
+
+            if (placedItems === totalItems) {
+              showCompletionScreen();
+            }
+          } else {
+            if (indicator) {
+              indicator.classList.add("incorrect");
+              setTimeout(() => indicator.classList.remove("incorrect"), 500);
+            }
+            if (targetSlot && targetSlot.classList.contains("state-slot")) {
+              targetSlot.classList.add("incorrect");
+              setTimeout(() => targetSlot.classList.remove("incorrect"), 1000);
+            }
+            score = Math.max(0, score - 2);
+            updateScore();
+          }
+        });
+
+        function updateScore() {
+          scoreElement.textContent = score;
+        }
+
+        function updateProgress() {
+          const progress = totalItems > 0 ? (placedItems / totalItems) * 100 : 0;
+          progressElement.style.width = progress + "%";
+        }
+
+        function showCompletionScreen() {
+          finalScoreElement.textContent = score;
+          completionMessage.textContent = `You've successfully placed all the ${currentMapId === "india" ? "states & UTs" : "districts"} on the map!`;
+          completionScreen.classList.add("active");
+          if (currentMapId === "india") {
+            indiaFlag.classList.add("active");
+            karnatakaFlag.classList.remove("active");
+            createChakraSpokes();
+          } else {
+            indiaFlag.classList.remove("active");
+            karnatakaFlag.classList.add("active");
+          }
+        }
+
+        function createChakraSpokes() {
+          chakraElement.innerHTML = "";
+          for (let i = 0; i < 24; i++) {
+            const spoke = document.createElement("div");
+            spoke.className = "spoke";
+            spoke.style.transform = `translate(-50%, -50%) rotate(${i * 15}deg)`;
+            chakraElement.appendChild(spoke);
+          }
+        }
+
+        resetButton.addEventListener("click", () => initGame(currentMapId));
+        hintButton.addEventListener("click", function () {
+          const unplacedItems = document.querySelectorAll(".state-item:not(.placed)");
+          if (unplacedItems.length > 0) {
+            const randomItem = unplacedItems[Math.floor(Math.random() * unplacedItems.length)];
+            const slot = document.querySelector(`.state-slot[data-id="${randomItem.dataset.id}"]`);
+            slot.style.borderColor = "#ffc107";
+            slot.style.backgroundColor = "rgba(255, 235, 59, 0.3)";
+            setTimeout(() => {
+              slot.style.borderColor = "";
+              slot.style.backgroundColor = "";
+            }, 2000);
+            score = Math.max(0, score - 5);
+            updateScore();
+          }
+        });
+
+        mapSelector.addEventListener("change", function () {
+          initGame(this.value);
+        });
+
+        playAgainButton.addEventListener("click", () => initGame());
+
+        initGame();
+      });
+    </script>
+  </body>
+</html>

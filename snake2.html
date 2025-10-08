@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <title>Snake Master 3D - Top View (Cartoon)</title>
+    <link rel="icon" href="data:," />
+    <style>
+      :root {
+        --bg: #0f1720;
+        --panel: #0b1220cc;
+        --accent: #8be04a;
+        --muted: #cbd5e1;
+        --glass: rgba(255, 255, 255, 0.06);
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        background: var(--bg);
+        font-family: Inter, system-ui, Segoe UI, Roboto, Helvetica, Arial,
+          sans-serif;
+        color: #e6eef6;
+      }
+      #app {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        backdrop-filter: blur(6px);
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(255, 255, 255, 0.01)
+        );
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      }
+      .title {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .logo {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #9ef05b, #39a938);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #083;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+      }
+      .title h1 {
+        font-size: 16px;
+        margin: 0;
+      }
+      .hud {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .panel {
+        background: var(--panel);
+        padding: 8px 10px;
+        border-radius: 10px;
+        min-width: 90px;
+        text-align: center;
+      }
+      .panel .label {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .panel .value {
+        font-weight: 700;
+        font-size: 18px;
+      }
+      #restartBtn {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 8px 10px;
+        border-radius: 10px;
+        color: #dff;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      #gameWrap {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 12px;
+      }
+      #canvasHolder {
+        width: 100%;
+        max-width: 1200px;
+        aspect-ratio: 16/9;
+        background: linear-gradient(#0b0b0c, #0b0b0c);
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      /* touch controls */
+      .controls {
+        position: absolute;
+        left: 12px;
+        bottom: 12px;
+        display: flex;
+        gap: 8px;
+        flex-direction: column;
+        align-items: flex-start;
+        user-select: none;
+      }
+      .dpad {
+        display: grid;
+        grid-template-columns: repeat(3, 56px);
+        grid-template-rows: repeat(3, 56px);
+        gap: 6px;
+        transform: scale(0.92);
+      }
+      .dpad button {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        border: none;
+        background: var(--glass);
+        backdrop-filter: blur(6px);
+        color: #fff;
+        font-size: 18px;
+      }
+      .dpad button.hidden {
+        visibility: hidden;
+      }
+      .btns {
+        position: absolute;
+        right: 12px;
+        bottom: 12px;
+        display: flex;
+        gap: 8px;
+        flex-direction: column;
+      }
+      .uiBtn {
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: none;
+        background: linear-gradient(180deg, #ffffff08, #00000020);
+        color: #fff;
+        backdrop-filter: blur(6px);
+        font-weight: 600;
+      }
+      /* modal */
+      .modal {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 40;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.03),
+          rgba(255, 255, 255, 0.02)
+        );
+        padding: 18px;
+        border-radius: 12px;
+        min-width: 260px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        display: none;
+      }
+      .modal.show {
+        display: block;
+      }
+      .modal h2 {
+        margin: 0 0 8px;
+      }
+      .modal p {
+        margin: 6px 0 14px;
+        color: var(--muted);
+      }
+      .modal button {
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: none;
+        background: linear-gradient(90deg, #7df97b, #2fc73f);
+        font-weight: 800;
+        cursor: pointer;
+      }
+      /* responsive tweaks */
+      @media (max-width: 520px) {
+        .dpad {
+          grid-template-columns: repeat(3, 44px);
+          grid-template-rows: repeat(3, 44px);
+        }
+        .dpad button {
+          width: 44px;
+          height: 44px;
+          border-radius: 10px;
+        }
+        .panel .value {
+          font-size: 15px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <div class="title">
+          <div class="logo">S</div>
+          <div>
+            <h1>Snake Master 3D</h1>
+            <div style="font-size: 12px; color: #9fb2c8; margin-top: 2px">
+              Top view • Cartoon grass • Mobile ready
+            </div>
+          </div>
+        </div>
+
+        <div class="hud">
+          <div class="panel">
+            <div class="label">SCORE</div>
+            <div id="score" class="value">0</div>
+          </div>
+          <div class="panel">
+            <div class="label">HIGH</div>
+            <div id="highscore" class="value">0</div>
+          </div>
+          <button id="restartBtn">Restart</button>
+        </div>
+      </header>
+
+      <div id="gameWrap">
+        <div id="canvasHolder">
+          <canvas id="glcanvas"></canvas>
+
+          <!-- Touch D-pad (left) -->
+          <div class="controls">
+            <div class="dpad" id="dpad">
+              <button data-dir="nw" class="hidden"></button>
+              <button data-dir="up">▲</button>
+              <button data-dir="ne" class="hidden"></button>
+
+              <button data-dir="left">◀</button>
+              <button data-dir="stop" class="hidden"></button>
+              <button data-dir="right">▶</button>
+
+              <button data-dir="sw" class="hidden"></button>
+              <button data-dir="down">▼</button>
+              <button data-dir="se" class="hidden"></button>
+            </div>
+          </div>
+
+          <!-- Right side quick controls -->
+          <div class="btns">
+            <button id="speedUp" class="uiBtn">Speed +</button>
+            <button id="speedDown" class="uiBtn">Speed -</button>
+          </div>
+
+          <div class="modal" id="gameOver">
+            <h2>Game Over</h2>
+            <p id="goText">You hit the fence!</p>
+            <div style="display: flex; gap: 10px; justify-content: center">
+              <button id="goRestart">Try Again</button>
+            </div>
+          </div>
+
+          <div class="modal show" id="startGame">
+            <h2>Snake Master 3D</h2>
+            <p>Click the button to start the game.</p>
+            <button id="startBtn">Start Game</button>
+          </div>
+        </div>
+      </div>
+
+      <footer
+        style="
+          padding: 12px 14px;
+          text-align: center;
+          font-size: 13px;
+          color: #99b2c6;
+          background: transparent;
+        "
+      >
+        Controls: Arrow keys or on-screen D-pad. Eat insects to grow. Avoid the
+        fence and yourself.
+      </footer>
+    </div>
+
+    <!-- Three.js -->
+    <script src="https://unpkg.com/three@0.156.0/build/three.min.js"></script>
+
+    <script>
+      (() => {
+        // Basic scene & top camera
+        const canvas = document.getElementById("glcanvas");
+        const renderer = new THREE.WebGLRenderer({
+          canvas,
+          antialias: true,
+          alpha: true,
+        });
+        renderer.setPixelRatio(
+          window.devicePixelRatio ? Math.min(window.devicePixelRatio, 2) : 1
+        );
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0b0f12);
+
+        // Camera: top oblique perspective for slight 3D feel
+        const camera = new THREE.PerspectiveCamera(50, 16 / 9, 0.1, 2000);
+        camera.position.set(0, 120, 0.01); // Y is up; very near z to look down
+        camera.up.set(0, 0, -1); // rotate so +z goes up on screen
+        camera.lookAt(0, 0, 0);
+
+        // Resize helper
+        function onResize() {
+          const rect = canvas.parentElement.getBoundingClientRect();
+          renderer.setSize(rect.width, rect.height, false);
+          camera.aspect = rect.width / rect.height;
+          camera.updateProjectionMatrix();
+        }
+        window.addEventListener("resize", onResize);
+
+        // Lights
+        const hemi = new THREE.HemisphereLight(0xddeeff, 0x22333f, 0.9);
+        scene.add(hemi);
+        const dir = new THREE.DirectionalLight(0xffffff, 0.6);
+        dir.position.set(100, 200, 100);
+        dir.castShadow = true;
+        dir.shadow.mapSize.set(2048, 2048);
+        dir.shadow.camera.left = -200;
+        dir.shadow.camera.right = 200;
+        dir.shadow.camera.top = 200;
+        dir.shadow.camera.bottom = -200;
+        scene.add(dir);
+
+        // Ground -> stylized grass via canvas texture
+        const grassTex = generateGrassTexture(1024, 1024);
+        grassTex.wrapS = grassTex.wrapT = THREE.RepeatWrapping;
+        grassTex.repeat.set(6, 4);
+
+        const groundMat = new THREE.MeshLambertMaterial({ map: grassTex });
+        const groundGeo = new THREE.PlaneGeometry(280, 160);
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // Fence (border walls)
+        const fenceGroup = new THREE.Group();
+        const fenceMat = new THREE.MeshStandardMaterial({
+          color: 0x2c2c2c,
+          metalness: 0.2,
+          roughness: 0.6,
+        });
+        const fencePostGeo = new THREE.BoxGeometry(2.5, 12, 2.5);
+        const fenceTopGeo = new THREE.BoxGeometry(280, 2, 2.5);
+        // create posts along edges
+        const borderX = 140,
+          borderZ = 80;
+        for (let x = -borderX; x <= borderX; x += 10) {
+          const p1 = new THREE.Mesh(fencePostGeo, fenceMat);
+          p1.position.set(x, 6, -borderZ);
+          p1.castShadow = true;
+          fenceGroup.add(p1);
+          const p2 = new THREE.Mesh(fencePostGeo, fenceMat);
+          p2.position.set(x, 6, borderZ);
+          p2.castShadow = true;
+          fenceGroup.add(p2);
+        }
+        for (let z = -borderZ + 10; z <= borderZ - 10; z += 10) {
+          const p1 = new THREE.Mesh(fencePostGeo, fenceMat);
+          p1.position.set(-borderX, 6, z);
+          p1.castShadow = true;
+          fenceGroup.add(p1);
+          const p2 = new THREE.Mesh(fencePostGeo, fenceMat);
+          p2.position.set(borderX, 6, z);
+          p2.castShadow = true;
+          fenceGroup.add(p2);
+        }
+        // top rails
+        const rail1 = new THREE.Mesh(
+          new THREE.BoxGeometry(280, 2, 2.5),
+          fenceMat
+        );
+        rail1.position.set(0, 11, -borderZ);
+        rail1.castShadow = true;
+        fenceGroup.add(rail1);
+        const rail2 = new THREE.Mesh(
+          new THREE.BoxGeometry(280, 2, 2.5),
+          fenceMat
+        );
+        rail2.position.set(0, 11, borderZ);
+        rail2.castShadow = true;
+        fenceGroup.add(rail2);
+        const rail3 = new THREE.Mesh(
+          new THREE.BoxGeometry(2.5, 2, 160),
+          fenceMat
+        );
+        rail3.position.set(-borderX, 11, 0);
+        rail3.castShadow = true;
+        fenceGroup.add(rail3);
+        const rail4 = new THREE.Mesh(
+          new THREE.BoxGeometry(2.5, 2, 160),
+          fenceMat
+        );
+        rail4.position.set(borderX, 11, 0);
+        rail4.castShadow = true;
+        fenceGroup.add(rail4);
+
+        scene.add(fenceGroup);
+
+        // play area rectangle (for logic)
+        const playBounds = {
+          minX: -borderX + 4,
+          maxX: borderX - 4,
+          minZ: -borderZ + 4,
+          maxZ: borderZ - 4,
+        };
+
+        // Snake state (2D plane coords: x,z). We'll render simple segments: head sphere + repeated body spheres.
+        let snake = [];
+        const initialLen = 5;
+        let dirVec = new THREE.Vector2(1, 0); // move along +x initially
+        let nextDir = dirVec.clone();
+        let speed = 45; // units per second
+        let growAmount = 0;
+
+        // snake geometry / meshes
+        const segmentMeshes = [];
+        const segmentMat = new THREE.MeshStandardMaterial({
+          color: 0x4bd14b,
+          roughness: 0.5,
+          metalness: 0.1,
+          emissive: 0x063c06,
+          emissiveIntensity: 0.03,
+        });
+        const bellyMat = new THREE.MeshStandardMaterial({
+          color: 0xcafed4,
+          roughness: 0.6,
+        });
+
+        function initSnake() {
+          // clear
+          snake = [];
+          segmentMeshes.forEach((m) => scene.remove(m));
+          segmentMeshes.length = 0;
+          growAmount = 0;
+          dirVec.set(1, 0);
+          nextDir = dirVec.clone();
+
+          const startX = -50;
+          const startZ = 0;
+          for (let i = 0; i < initialLen; i++) {
+            snake.push(new THREE.Vector2(startX - i * 3.8, startZ));
+          }
+          // create meshes
+          for (let i = 0; i < snake.length; i++) createSegmentMesh();
+          updateSegmentMeshes();
+        }
+
+        function createSegmentMesh() {
+          const gHead = new THREE.SphereGeometry(2.6, 18, 12);
+          const gBody = new THREE.CylinderGeometry(2.6, 2.6, 4.2, 12, 1, true);
+          const mesh = new THREE.Mesh(gBody, segmentMat);
+          // small belly accent via second mesh
+          const belly = new THREE.Mesh(
+            new THREE.BoxGeometry(3.2, 0.4, 4.2),
+            bellyMat
+          );
+          belly.position.y = -1.8;
+          belly.rotation.x = 0;
+          const group = new THREE.Group();
+          group.add(mesh);
+          group.add(belly);
+          group.castShadow = true;
+          group.receiveShadow = true;
+          scene.add(group);
+          segmentMeshes.push(group);
+          return group;
+        }
+
+        function updateSegmentMeshes() {
+          for (let i = 0; i < snake.length; i++) {
+            const pos = snake[i];
+            const mesh = segmentMeshes[i];
+            if (!mesh) createSegmentMesh();
+            const m = segmentMeshes[i];
+            const y =
+              2.5 + Math.sin(i * 0.6 + performance.now() * 0.002) * 0.07;
+            m.position.set(pos.x, y, pos.y);
+            // orientation toward next segment or direction
+            let target;
+            if (i === 0) {
+              target = new THREE.Vector3(
+                pos.x + dirVec.x * 0.2,
+                y,
+                pos.y + dirVec.y * 0.2
+              );
+            } else {
+              target = new THREE.Vector3(snake[i - 1].x, y, snake[i - 1].y);
+            }
+            const v = new THREE.Vector3().subVectors(target, m.position);
+            const angle = Math.atan2(v.z, v.x);
+            m.rotation.set(0, -angle, 0); // rotate to face forward (adjust as needed)
+            // scale head slightly bigger
+            const s = 1 - Math.min(i * 0.03, 0.4);
+            m.scale.set(1.0 * s, 1.0, 1.0 * s);
+          }
+          // if meshes > segments, remove extras
+          while (segmentMeshes.length > snake.length) {
+            const rem = segmentMeshes.pop();
+            scene.remove(rem);
+          }
+        }
+
+        // Head "face" small eyes as additional decoration
+        const faceGroup = (() => {
+          const g = new THREE.Group();
+          const eyeGeo = new THREE.SphereGeometry(0.45, 10, 8);
+          const eyeMat = new THREE.MeshStandardMaterial({
+            color: 0x1b242b,
+            metalness: 0.2,
+            roughness: 0.4,
+          });
+          const e1 = new THREE.Mesh(eyeGeo, eyeMat);
+          e1.position.set(2.6, 2.2, 0.7);
+          const e2 = new THREE.Mesh(eyeGeo, eyeMat);
+          e2.position.set(2.6, 2.2, -0.7);
+          g.add(e1, e2);
+          scene.add(g);
+          return g;
+        })();
+
+        // Insects: spawn small colorful shapes that bob and rotate
+        const insects = [];
+        function spawnInsect() {
+          const colors = [0xff6b6b, 0xffcf66, 0x66f0a5, 0x88aaff, 0xef68ff];
+          const col = colors[(Math.random() * colors.length) | 0];
+          const geo = new THREE.OctahedronGeometry(
+            1.0 + Math.random() * 0.8,
+            0
+          );
+          const mat = new THREE.MeshStandardMaterial({
+            color: col,
+            emissive: col,
+            emissiveIntensity: 0.08,
+            roughness: 0.5,
+          });
+          const m = new THREE.Mesh(geo, mat);
+          m.castShadow = true;
+          // random near center but within play bounds
+          const margin = 10;
+          const x = THREE.MathUtils.lerp(
+            playBounds.minX + margin,
+            playBounds.maxX - margin,
+            Math.random()
+          );
+          const z = THREE.MathUtils.lerp(
+            playBounds.minZ + margin,
+            playBounds.maxZ - margin,
+            Math.random()
+          );
+          m.position.set(x, 3.8 + Math.random() * 2, z);
+          m.userData = { bob: Math.random() * 10, type: "insect" };
+          scene.add(m);
+          insects.push(m);
+        }
+
+        // spawn a few at start
+        for (let i = 0; i < 6; i++) spawnInsect();
+
+        // collision helpers
+        function distance2(a, b) {
+          const dx = a.x - b.x,
+            dz = a.y - b.y;
+          return dx * dx + dz * dz;
+        }
+        function pointDistance2(x1, z1, x2, z2) {
+          const dx = x1 - x2,
+            dz = z1 - z2;
+          return dx * dx + dz * dz;
+        }
+
+        // Game state
+        let lastTime = performance.now();
+        let playing = false;
+        let score = 0;
+        const scoreEl = document.getElementById("score");
+        const highEl = document.getElementById("highscore");
+        const gameOverModal = document.getElementById("gameOver");
+        const goText = document.getElementById("goText");
+
+        function loadHigh() {
+          return parseInt(localStorage.getItem("snake3d_high") || "0", 10);
+        }
+        function saveHigh(v) {
+          localStorage.setItem("snake3d_high", String(v));
+        }
+
+        let highScore = loadHigh();
+        highEl.textContent = highScore;
+
+        // Movement logic using simple follow algorithm
+        function step(delta) {
+          if (!playing) return;
+          // apply queued direction (prevent 180 reverse)
+          if (Math.abs(nextDir.x) + Math.abs(nextDir.y) > 0) {
+            // prevent exact reverse (head to segment)
+            const rev = nextDir.x === -dirVec.x && nextDir.y === -dirVec.y;
+            if (!rev) dirVec.copy(nextDir);
+          }
+
+          const distance = speed * (delta / 1000);
+          // move head
+          const head = snake[0].clone();
+          head.x += dirVec.x * distance;
+          head.y += dirVec.y * distance;
+          // clamp inside bounds (we detect collision if exceed)
+          snake.unshift(head);
+          if (growAmount > 0) {
+            growAmount--;
+          } else {
+            snake.pop();
+          }
+
+          // update meshes positions
+          updateSegmentMeshes();
+          // update face attach to head
+          if (segmentMeshes[0]) {
+            faceGroup.position.copy(segmentMeshes[0].position);
+            // rotate face to look forward
+            const angle = Math.atan2(dirVec.y, dirVec.x);
+            faceGroup.rotation.set(0, -angle, 0);
+            faceGroup.position.y += 1.6;
+          }
+
+          // insect bob animation
+          insects.forEach((ins, i) => {
+            ins.rotation.x += 0.01 + i * 0.0009;
+            ins.rotation.y += 0.014 + i * 0.0007;
+            ins.position.y =
+              3.6 +
+              Math.sin(performance.now() * 0.002 + ins.userData.bob) * 1.2;
+          });
+
+          // check eat insects
+          for (let i = insects.length - 1; i >= 0; i--) {
+            const ins = insects[i];
+            const d2 = pointDistance2(
+              snake[0].x,
+              snake[0].y,
+              ins.position.x,
+              ins.position.z
+            );
+            if (d2 < 3.8 * 3.8 + 0.0001) {
+              // eat
+              scene.remove(ins);
+              insects.splice(i, 1);
+              spawnInsect();
+              growAmount += 4 + ((Math.random() * 3) | 0);
+              score += 10;
+              scoreEl.textContent = score;
+              if (score > highScore) {
+                highScore = score;
+                highEl.textContent = highScore;
+                saveHigh(highScore);
+              }
+            }
+          }
+
+          // collision with walls (fence)
+          const hx = snake[0].x,
+            hz = snake[0].y;
+          if (
+            hx < playBounds.minX ||
+            hx > playBounds.maxX ||
+            hz < playBounds.minZ ||
+            hz > playBounds.maxZ
+          ) {
+            endGame("You hit the fence!");
+          }
+
+          // collision with self (simple check: head with body segments after index 4)
+          for (let i = 4; i < snake.length; i++) {
+            const seg = snake[i];
+            if (pointDistance2(hx, hz, seg.x, seg.y) < 3.2 * 3.2) {
+              endGame("You ran into yourself!");
+              break;
+            }
+          }
+        }
+
+        function endGame(msg) {
+          // if (!playing) return;
+          // playing = false;
+          // goText.textContent = msg;
+          // gameOverModal.classList.add("show");
+          // highlight final
+        }
+
+        // Input (keyboard + touchscreen)
+        window.addEventListener("keydown", (e) => {
+          if (!playing && e.key === "r") restart();
+          const k = e.key.toLowerCase();
+          if (k === "arrowup" || k === "w") setDir(0, -1);
+          if (k === "arrowdown" || k === "s") setDir(0, 1);
+          if (k === "arrowleft" || k === "a") setDir(-1, 0);
+          if (k === "arrowright" || k === "d") setDir(1, 0);
+        });
+
+        function setDir(x, z) {
+          // normalize to cardinal or diagonal nearest
+          const v = new THREE.Vector2(x, z);
+          if (v.lengthSq() === 0) return;
+          v.normalize();
+          // allow diagonals slightly
+          nextDir.copy(v);
+        }
+
+        // D-pad buttons
+        document.querySelectorAll("#dpad button").forEach((btn) => {
+          btn.addEventListener("pointerdown", (e) => {
+            const d = btn.getAttribute("data-dir");
+            if (d === "up") setDir(0, -1);
+            if (d === "down") setDir(0, 1);
+            if (d === "left") setDir(-1, 0);
+            if (d === "right") setDir(1, 0);
+          });
+        });
+
+        // swipe support
+        let touchStart = null;
+        canvas.addEventListener(
+          "touchstart",
+          (e) => {
+            if (e.touches.length === 1)
+              touchStart = {
+                x: e.touches[0].clientX,
+                y: e.touches[0].clientY,
+                t: performance.now(),
+              };
+          },
+          { passive: true }
+        );
+        canvas.addEventListener(
+          "touchend",
+          (e) => {
+            if (!touchStart) return;
+            const dt = performance.now() - touchStart.t;
+            // approximate by comparing last touch position if available
+            // fallback: use changedTouches
+            const last =
+              (e.changedTouches && e.changedTouches[0]) || touchStart;
+            const dx = last.clientX - touchStart.x;
+            const dy = last.clientY - touchStart.y;
+            if (Math.abs(dx) > Math.abs(dy)) {
+              if (dx > 15) setDir(1, 0);
+              else if (dx < -15) setDir(-1, 0);
+            } else {
+              if (dy > 15) setDir(0, 1);
+              else if (dy < -15) setDir(0, -1);
+            }
+            touchStart = null;
+          },
+          { passive: true }
+        );
+
+        // speed controls
+        document.getElementById("speedUp").addEventListener("click", () => {
+          speed = Math.min(220, speed + 10);
+        });
+        document.getElementById("speedDown").addEventListener("click", () => {
+          speed = Math.max(16, speed - 10);
+        });
+
+        // restart controls
+        function restart(){
+    // reset state
+    initSnake();
+    score = 0;
+    scoreEl.textContent = '0';
+    playing = true;
+    gameOverModal.classList.remove('show');
+    lastTime = performance.now();
+  }
+
+  document.getElementById('restartBtn').addEventListener('click', restart);
+  document.getElementById('goRestart').addEventListener('click', restart);
+
+  document.getElementById('startBtn').addEventListener('click', () => {
+    document.getElementById('startGame').classList.remove('show');
+    restart();
+  });
+
+  // main loop
+  function animate(){
+    requestAnimationFrame(animate);
+    const now = performance.now();
+    const delta = now - lastTime;
+    lastTime = now;
+    step(delta);
+    renderer.render(scene, camera);
+  }
+
+  // initSnake(); // This is now called from restart() when the game starts.
+  onResize();
+  animate();
+
+  // Grass texture generator (utility at end)
+  function generateGrassTexture(w,h){
+    const cvs = document.createElement('canvas');
+    cvs.width=w; cvs.height=h;
+    const ctx = cvs.getContext('2d');
+    ctx.fillStyle='#0b3d0b';
+    ctx.fillRect(0,0,w,h);
+    for(let i=0;i<20000;i++){
+      const x=Math.random()*w, y=Math.random()*h;
+      const g = ctx.createRadialGradient(x,y,0,x,y,Math.random()*12+6);
+      g.addColorStop(0,`rgba(100,${150+Math.random()*80|0},100,0.7)`);
+      g.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=g;
+      ctx.fillRect(x-20,y-20,40,40);
+    }
+    return new THREE.CanvasTexture(cvs);
+  }
+})();
+    </script>
+  </body>
+</html>

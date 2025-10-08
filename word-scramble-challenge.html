@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Word Scramble Challenge</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --primary-color: #ff6347; /* Tomato */
+        --secondary-color: #1e90ff; /* DodgerBlue */
+        --success-color: #32cd32; /* LimeGreen */
+        --warning-color: #ffa500; /* Orange */
+        --light-bg: #f0f8ff; /* AliceBlue */
+        --dark-text: #333;
+      }
+      body {
+        background: linear-gradient(135deg, var(--light-bg), #d8eaff);
+        font-family: "Luckiest Guy", cursive;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        color: var(--dark-text);
+        overflow: hidden;
+      }
+      .game-container {
+        background-color: #ffffff;
+        padding: 40px;
+        border-radius: 30px;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        border: 5px solid #fff;
+        text-align: center;
+        max-width: 500px;
+        width: 90%;
+        position: relative;
+        animation: pop-in 0.5s ease-out;
+      }
+      @keyframes pop-in {
+        0% {
+          transform: scale(0.5);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      h1 {
+        color: var(--primary-color);
+        font-size: 3rem;
+        margin-bottom: 15px;
+        text-shadow: 3px 3px 0 #fff, 6px 6px 0 rgba(0, 0, 0, 0.1);
+      }
+      .logo {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: 15px;
+        color: #fff;
+        font-size: 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+      }
+      .stats-container {
+        display: flex;
+        justify-content: space-around;
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+        color: var(--secondary-color);
+      }
+      .scrambled-word {
+        font-size: 2.5rem;
+        letter-spacing: 8px;
+        padding: 25px;
+        background-color: #f0f0f0;
+        border-radius: 15px;
+        margin-bottom: 25px;
+        color: #444;
+        border: 3px dashed var(--secondary-color);
+        animation: fade-in 0.5s ease-in-out;
+      }
+      @keyframes fade-in {
+        0% {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .form-control {
+        height: 60px;
+        font-size: 1.5rem;
+        text-align: center;
+        border-radius: 15px;
+        border: 3px solid #ccc;
+        transition: border-color 0.3s;
+      }
+      .form-control:focus {
+        border-color: var(--secondary-color);
+        box-shadow: 0 0 10px var(--secondary-color);
+      }
+      .btn {
+        font-family: "Luckiest Guy", cursive;
+        font-size: 1.3rem;
+        padding: 15px 25px;
+        border-radius: 15px;
+        margin: 8px;
+        border: none;
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+      }
+      .btn-primary {
+        background-color: var(--secondary-color);
+        color: #fff;
+      }
+      .btn-success {
+        background-color: var(--success-color);
+        color: #fff;
+      }
+      .btn-info {
+        background-color: var(--warning-color);
+        color: #fff;
+      }
+      .btn-danger {
+        background-color: var(--primary-color);
+        color: #fff;
+      }
+      .btn-secondary {
+        background-color: #6c757d;
+        color: #fff;
+      }
+      .hidden {
+        display: none;
+      }
+      .message {
+        font-size: 1.5rem;
+        margin-top: 15px;
+        min-height: 40px;
+        font-weight: normal;
+        margin-bottom: 15px;
+      }
+      .congrats-animation {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+      .congrats-animation span {
+        position: absolute;
+        font-size: 2.5rem;
+        animation: fall-and-fade 4s linear forwards;
+      }
+      @keyframes fall-and-fade {
+        0% {
+          top: -10%;
+          transform: rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          top: 110%;
+          transform: rotate(360deg);
+          opacity: 0;
+        }
+      }
+      .shake {
+        animation: shake 0.5s;
+      }
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-10px);
+        }
+        75% {
+          transform: translateX(10px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="game-container">
+      <h1>Word Scramble! 🤪</h1>
+
+      <div id="start-screen">
+        <button class="btn btn-primary btn-lg" id="start-btn">
+          Start Game
+        </button>
+      </div>
+
+      <div id="game-screen" class="hidden">
+        <div class="stats-container">
+          <div class="score-board">Score: <span id="score">0</span></div>
+          <div class="timer">Time: <span id="time">30</span>s</div>
+        </div>
+        <div class="message" id="message"></div>
+        <div class="scrambled-word" id="scrambled-word"></div>
+        <div class="input-group">
+          <input
+            type="text"
+            class="form-control"
+            id="guess-input"
+            placeholder="Your guess..."
+          />
+        </div>
+        <div class="mt-3">
+          <button class="btn btn-primary" id="submit-btn">Submit</button>
+          <button class="btn btn-info" id="hint-btn">Hint</button>
+          <button class="btn btn-danger" id="restart-btn">Restart</button>
+          <button class="btn btn-secondary hidden" id="back-btn">
+            Back to Scramble
+          </button>
+          <button class="btn btn-success hidden" id="next-word-btn">
+            Next Word
+          </button>
+        </div>
+      </div>
+
+      <div class="congrats-animation" id="congrats-animation"></div>
+    </div>
+
+    <script>
+      let currentWord = "";
+      let scrambledWord = "";
+      let score = 0;
+      let hintsLeft = 3;
+      let hintDisplay = [];
+      let timer;
+      let timeLeft = 30;
+
+      const scrambledWordEl = document.getElementById("scrambled-word");
+      const guessInputEl = document.getElementById("guess-input");
+      const messageEl = document.getElementById("message");
+      const scoreEl = document.getElementById("score");
+      const timeEl = document.getElementById("time");
+      const submitBtn = document.getElementById("submit-btn");
+      const hintBtn = document.getElementById("hint-btn");
+      const nextWordBtn = document.getElementById("next-word-btn");
+      const congratsAnimationEl = document.getElementById("congrats-animation");
+      const startBtn = document.getElementById("start-btn");
+      const restartBtn = document.getElementById("restart-btn");
+      const backBtn = document.getElementById("back-btn");
+      const startScreenEl = document.getElementById("start-screen");
+      const gameScreenEl = document.getElementById("game-screen");
+
+      function startGame() {
+        startScreenEl.classList.add("hidden");
+        gameScreenEl.classList.remove("hidden");
+        score = 0;
+        scoreEl.textContent = score;
+        newGame();
+      }
+
+      async function newGame() {
+        clearInterval(timer);
+        timeLeft = 30;
+        timeEl.textContent = timeLeft;
+        timeEl.style.color = "var(--secondary-color)";
+
+        guessInputEl.value = "";
+        guessInputEl.disabled = false;
+        guessInputEl.classList.remove("shake");
+        messageEl.textContent = "";
+        scrambledWordEl.textContent = "Loading...";
+
+        try {
+          const wordLength = Math.floor(Math.random() * 4) + 5; // 5 to 8 letters
+          const response = await fetch(
+            `https://random-word-api.herokuapp.com/word?length=${wordLength}`
+          );
+          const data = await response.json();
+          currentWord = data[0];
+          if (!currentWord) throw new Error("No word received");
+
+          scrambledWord = scrambleWord(currentWord);
+          scrambledWordEl.textContent = scrambledWord;
+          scrambledWordEl.classList.remove("fade-in");
+          void scrambledWordEl.offsetWidth; // Trigger reflow
+          scrambledWordEl.classList.add("fade-in");
+
+          hintsLeft = 3;
+          hintDisplay = Array(currentWord.length).fill("_");
+          hintBtn.disabled = false;
+          hintBtn.textContent = `Hint (${hintsLeft})`;
+
+          submitBtn.classList.remove("hidden");
+          hintBtn.classList.remove("hidden");
+          restartBtn.classList.remove("hidden");
+          nextWordBtn.classList.add("hidden");
+          backBtn.classList.add("hidden");
+          congratsAnimationEl.innerHTML = "";
+          startTimer();
+        } catch (error) {
+          console.error("Failed to fetch word:", error);
+          messageEl.textContent = "Could not load a new word. Please check your internet connection and try again.";
+          scrambledWordEl.textContent = ":(";
+        }
+      }
+
+      function scrambleWord(word) {
+        let scrambled = word
+          .split("")
+          .sort(() => 0.5 - Math.random())
+          .join("");
+        return scrambled === word ? scrambleWord(word) : scrambled;
+      }
+
+      function startTimer() {
+        timer = setInterval(() => {
+          timeLeft--;
+          timeEl.textContent = timeLeft;
+          if (timeLeft <= 5) {
+            timeEl.style.color = "var(--primary-color)";
+          } else {
+            timeEl.style.color = "var(--secondary-color)";
+          }
+          if (timeLeft === 0) {
+            clearInterval(timer);
+            messageEl.textContent = "Time's up! ⏰";
+            endRound(false);
+          }
+        }, 1000);
+      }
+
+      function checkGuess() {
+        clearInterval(timer);
+        const guess = guessInputEl.value.toLowerCase().trim();
+        if (guess === currentWord) {
+          score++;
+          scoreEl.textContent = score;
+          messageEl.textContent = "AWESOME! 🎉";
+          messageEl.style.color = "var(--success-color)";
+          showCongratsAnimation();
+          endRound(true);
+        } else {
+          messageEl.textContent = "Not quite! Try the next one!";
+          messageEl.style.color = "var(--primary-color)";
+          guessInputEl.classList.add("shake");
+          endRound(false);
+        }
+      }
+
+      function endRound(isCorrect) {
+        if (!isCorrect) {
+          messageEl.innerHTML += `<br>The word was: <b>${currentWord}</b>`;
+        }
+        guessInputEl.disabled = true;
+        submitBtn.classList.add("hidden");
+        hintBtn.classList.add("hidden");
+        backBtn.classList.add("hidden");
+        nextWordBtn.classList.remove("hidden");
+      }
+
+      function showCongratsAnimation() {
+        const emojis = ["🥳", "🎉", "🎈", "🎊", "✨", "🤩", "👍", "💯"];
+        for (let i = 0; i < 40; i++) {
+          const emoji = document.createElement("span");
+          emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+          emoji.style.left = Math.random() * 100 + "%";
+          emoji.style.animationDelay = Math.random() * 4 + "s";
+          emoji.style.fontSize = Math.random() * 1.5 + 1 + "rem";
+          congratsAnimationEl.appendChild(emoji);
+        }
+      }
+
+      function showHint() {
+        if (hintsLeft > 0) {
+          hintsLeft--;
+          hintBtn.textContent = `Hint (${hintsLeft})`;
+
+          let availableIndices = [];
+          for (let i = 1; i < currentWord.length - 1; i++) {
+            if (hintDisplay[i] === "_") {
+              availableIndices.push(i);
+            }
+          }
+
+          if (availableIndices.length === 0) {
+            for (let i = 0; i < currentWord.length; i++) {
+              if (hintDisplay[i] === "_") {
+                availableIndices.push(i);
+              }
+            }
+          }
+
+          if (availableIndices.length > 0) {
+            const randomIndex =
+              availableIndices[
+                Math.floor(Math.random() * availableIndices.length)
+              ];
+            hintDisplay[randomIndex] = currentWord[randomIndex];
+            scrambledWordEl.textContent = hintDisplay.join("");
+            backBtn.classList.remove("hidden");
+          }
+
+          if (hintsLeft === 0) {
+            hintBtn.disabled = true;
+          }
+        }
+      }
+
+      startBtn.addEventListener("click", startGame);
+      restartBtn.addEventListener("click", () => {
+        score = 0;
+        scoreEl.textContent = score;
+        newGame();
+      });
+      submitBtn.addEventListener("click", checkGuess);
+      nextWordBtn.addEventListener("click", newGame);
+      hintBtn.addEventListener("click", showHint);
+      backBtn.addEventListener("click", () => {
+        scrambledWordEl.textContent = scrambledWord;
+        backBtn.classList.add("hidden");
+      });
+      guessInputEl.addEventListener("keyup", (e) => {
+        if (e.key === "Enter" && !guessInputEl.disabled) {
+          checkGuess();
+        }
+      });
+    </script>
+  </body>
+</html>
