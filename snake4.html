@@ -79,12 +79,18 @@
         justify-content: space-between;
         padding: 12px 16px;
         backdrop-filter: blur(20px);
-        background: linear-gradient(
+        /* background: linear-gradient(
           180deg,
           rgba(255, 255, 255, 0.05),
           rgba(255, 255, 255, 0.02)
-        );
-        border-bottom: 1px solid var(--border);
+        ); */
+
+        background: #000000 !important;
+        /* Black background */
+        /* background-color: #3d3d3d !important; */
+        /* border-bottom: 1px solid #333; */
+
+        /* border-bottom: 1px solid var(--border); */
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         flex-shrink: 0;
         z-index: 20;
@@ -140,11 +146,10 @@
       /* Enhanced HUD */
       .hud {
         display: flex;
-        align-items: stretch; /* Changed from center */
+        align-items: stretch;
         justify-content: center;
         gap: 10px;
         padding: 10px 12px;
-        flex-wrap: wrap;
       }
 
       .panel {
@@ -161,6 +166,8 @@
         display: flex;
         flex-direction: column;
         justify-content: center;
+        flex-shrink: 1;
+        box-shadow: 0 4px 0 0 #008c2e;
       }
 
       .panel:hover {
@@ -170,7 +177,8 @@
 
       .panel .label {
         font-size: 15px;
-        color: var(--muted);
+        color: white;
+        /* color: var(--muted); */
         text-transform: uppercase;
         letter-spacing: 0.8px;
         font-weight: 600;
@@ -226,12 +234,16 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 70px;
+        width: 50px; /* Reduced width for pause and restart buttons */
+        flex-shrink: 1;
       }
 
       #restartBtn {
-        background: linear-gradient(135deg, #ff6b6b, #ff4757);
-        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        /* background: linear-gradient(135deg, #ff6b6b, #ff4757);
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3); */
+        border-radius: 16px;
+        background: #fd3f2e;
+        box-shadow: 0 4px 0 0 #e21502;
       }
 
       #restartBtn:hover {
@@ -240,8 +252,10 @@
       }
 
       #pauseBtn {
-        background: linear-gradient(135deg, #74b9ff, #0984e3);
+        /* background: linear-gradient(135deg, #74b9ff, #0984e3); */
+        background: #7b0fff;
         box-shadow: 0 4px 15px rgba(116, 185, 255, 0.3);
+        box-shadow: 0 4px 0 0 #5600bf;
       }
 
       #pauseBtn:hover {
@@ -251,27 +265,38 @@
 
       /* Enhanced Game Area */
       #gameWrap {
-        flex: 1;
+        background: linear-gradient(
+          135deg,
+          #364556 0%,
+          #2e3f50 100%
+        ) !important;
+        border-radius: 16px;
+        margin: 10px auto;
+        width: 95%;
+        max-width: 800px;
+        height: calc(100% - 20px);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
         display: flex;
         align-items: stretch;
         justify-content: stretch;
-        padding: 0;
-        min-height: 0;
-        position: relative;
-        height: 100%;
-        width: 100%;
       }
 
+      /* Canvas holder should be transparent to show the blue card background */
       #canvasHolder {
         width: 100%;
         height: 100%;
-        border-radius: 0;
+        border-radius: 16px;
         position: relative;
         overflow: hidden;
-        border: 1px solid var(--border);
-        display: flex;
-        align-items: stretch;
-        justify-content: stretch;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: transparent; /* Make it transparent */
+      }
+
+      /* Make sure the app container doesn't have background */
+      #app {
+        background: transparent;
       }
 
       canvas {
@@ -312,8 +337,8 @@
         font-weight: bold;
         cursor: pointer;
         transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 12px rgba(221, 8, 8, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        /* box-shadow: 0 4px 12px rgba(221, 8, 8, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2); */
         border: 1px solid rgba(255, 255, 255, 0.1);
         display: flex;
         align-items: center;
@@ -448,12 +473,15 @@
       .modal-header {
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-start;
         width: 100%;
         margin-bottom: 12px;
+        gap: 12px;
       }
 
       #goText {
+        display: flex;
+        align-items: center;
         color: black;
         font-weight: bold;
         font-size: 18px;
@@ -464,6 +492,12 @@
 
       #goText .go-icon {
         color: red;
+      }
+      .go-icon-svg {
+        width: 24px;
+        height: 24px;
+        vertical-align: middle;
+        margin-right: 8px;
       }
 
       .modal-buttons {
@@ -501,6 +535,7 @@
 
       #gameOver .close-modal-btn:hover {
         background-color: #616161;
+        box-shadow: 0 3px 0 0 #676767;
       }
 
       .modal button {
@@ -519,18 +554,20 @@
       .btn-primary {
         background: #7b0fff;
         color: #ffffff;
-        box-shadow: 0 6px 20px rgba(139, 224, 74, 0.3);
+        /* box-shadow: 0 6px 20px rgba(139, 224, 74, 0.3); */
+        box-shadow: 0 4px 0 0 #5600bf;
       }
 
       .btn-primary:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 30px rgba(139, 224, 74, 0.5);
+        box-shadow: 0 8px 30px rgba(32, 253, 12, 0.5);
       }
 
       .btn-secondary {
         background: linear-gradient(135deg, #6c7293, #5a5d7a);
         color: white;
-        box-shadow: 0 6px 20px rgba(108, 114, 147, 0.3);
+        /* box-shadow: 0 6px 20px rgba(108, 114, 147, 0.3); */
+        box-shadow: 0 4px 0 0 #676767;
       }
 
       .btn-secondary:hover {
@@ -588,11 +625,17 @@
         text-align: center;
         font-size: 11px;
         color: #99b2c6;
-        background: linear-gradient(
+        /* background: linear-gradient(
           180deg,
           transparent,
           rgba(255, 255, 255, 0.02)
-        );
+        ); */
+
+        background: #000000 !important; /* Black background */
+        border-top: 1px solid #333;
+        color: #ffffff;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+
         flex-shrink: 0;
         border-top: 1px solid var(--border);
         backdrop-filter: blur(10px);
@@ -603,7 +646,8 @@
         position: absolute;
         top: 16px;
         right: 16px;
-        background: var(--glass);
+        /* background: var(--glass); */
+        background-color: #000000 !important; /* Black background */
         backdrop-filter: blur(10px);
         padding: 6px 10px;
         border-radius: 8px;
@@ -613,17 +657,30 @@
         z-index: 20;
       }
 
+      /* ===== RESPONSIVE ADJUSTMENTS ===== */
       @media (max-width: 768px) {
-        header {
-          padding: 10px 12px;
-        }
         #gameWrap {
-          padding: 0;
-          height: 100%;
+          width: 92%;
+          border-radius: 12px;
+          margin: 8px auto;
+          height: calc(100% - 16px);
         }
+
         #canvasHolder {
-          border-radius: 0;
-          height: 100%;
+          border-radius: 12px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        #gameWrap {
+          width: 90%;
+          border-radius: 8px;
+          margin: 5px auto;
+          height: calc(100% - 10px);
+        }
+
+        #canvasHolder {
+          border-radius: 8px;
         }
       }
 
@@ -745,16 +802,19 @@
         }
       }
       .timer-panel {
-        background: linear-gradient(135deg, #06b6d4, #0891b2);
+        border-radius: 16px;
+        background: #02bdf1;
+        box-shadow: 0 4px 0 0 #029eca;
         padding: 10px 16px;
-        border-radius: 15px;
+        /* border-radius: 15px; */
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         min-width: 90px;
-        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        /* box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4); */
+        /* border: 1px solid rgba(255, 255, 255, 0.2); */
+        flex-shrink: 1;
       }
       .timer-panel .value {
         font-weight: 800;
@@ -875,17 +935,9 @@
         cursor: pointer;
         padding: 0;
       }
-      #helpButton > div {
-        background: white;
+      #helpButton > img {
         width: 30px;
         height: 30px;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-weight: bold;
-        color: black;
-        font-size: 20px;
       }
       /* Help Popup Styles */
       .help-popup-overlay {
@@ -894,13 +946,18 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 99;
-        display: none;
+        background: transparent;
+        z-index: -1;
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+        pointer-events: none;
       }
 
       .help-popup-overlay.show {
-        display: block;
+        visibility: visible;
+        opacity: 1;
+        z-index: 99;
       }
 
       .help-popup {
@@ -913,15 +970,15 @@
         border-top-right-radius: 20px;
         box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
         z-index: 100;
-        display: none;
+        visibility: hidden;
         transform: translateY(100%);
-        transition: transform 0.3s ease-out;
+        transition: transform 0.3s ease-out, visibility 0.3s ease;
         padding: 20px;
         box-sizing: border-box;
       }
 
       .help-popup.show {
-        display: block;
+        visibility: visible;
         transform: translateY(0);
       }
 
@@ -942,7 +999,7 @@
       #closeHelpPopup {
         background: none;
         border: none;
-        color: black;
+        color: #fff;
         font-size: 24px;
         cursor: pointer;
         width: 30px;
@@ -951,13 +1008,14 @@
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        background-color: #f0f0f0;
+        /* background-color: #f0f0f0; */
+        background: #818181;
+        box-shadow: 0 3px 0 0 #676767;
       }
 
       .swipe-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(2, 1fr);
         gap: 15px;
       }
 
@@ -967,22 +1025,102 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
-        padding: 20px;
+        justify-content: space-between;
+        padding: 25px;
         aspect-ratio: 1;
       }
 
-      .swipe-direction img {
-        width: 60px;
-        height: 60px;
-        margin-bottom: 10px;
+      .swipe-header {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start; /* 👈 align to start (left) */
+        gap: 8px;
+        width: 100%; /* ensures alignment respects card width */
+        margin-top: -5px;
+      }
+
+      .swipe-icon-circle {
+        width: 36px;
+        height: 36px;
+        background-color: #415367;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .swipe-icon {
+        width: 18px;
+        height: 18px;
         object-fit: contain;
       }
 
-      .swipe-direction span {
+      .swipe-header span {
         color: white;
         font-size: 14px;
-        font-weight: 500;
+        font-weight: 600;
+      }
+
+      .snake-img {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+      }
+      .snake-down {
+        transform: rotate(-90deg);
+      }
+      /* body {
+        background: #000000 !important;
+        margin: 0;
+        padding: 0;
+      } */
+      /* Enhanced Background Gradient */
+      /* body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #364556 0%, #252750 100%);
+        z-index: -1;
+      } */
+
+      /* Optional: Add subtle pattern or noise texture */
+      /* body::after {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: radial-gradient(
+            circle at 25% 25%,
+            rgba(255, 255, 255, 0.1) 1px,
+            transparent 1px
+          ),
+          radial-gradient(
+            circle at 75% 75%,
+            rgba(255, 255, 255, 0.05) 1px,
+            transparent 1px
+          );
+        background-size: 50px 50px, 30px 30px;
+        z-index: -1;
+        opacity: 0.3;
+      } */
+      html,
+      body {
+        background: #000000 !important; /* Black background for entire page */
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+      }
+
+      /* Remove the gradient from body pseudo-elements */
+      body::before,
+      body::after {
+        content: none !important;
       }
     </style>
   </head>
@@ -1021,7 +1159,6 @@
           </div>
         </div>
       </header>
-
       <div id="gameWrap">
         <div id="canvasHolder">
           <canvas id="glcanvas"></canvas>
@@ -1031,14 +1168,14 @@
             class="performance-indicator"
             onclick="showHelpPopup()"
           >
-            <div>!</div>
+            <img src="images/info.svg" alt="Help" />
           </div>
           <!-- Game Over Overlay -->
           <div class="game-over-overlay" id="gameOverOverlay"></div>
 
           <!-- Mobile Controls -->
-          <div class="controls">
-            <div class="dpad" id="dpad">
+          <!-- <div class="controls"> -->
+          <!-- <div class="dpad" id="dpad">
               <button data-dir="nw" class="hidden" aria-hidden="true"></button>
               <button data-dir="up" aria-label="Move Up">▲</button>
               <button data-dir="ne" class="hidden" aria-hidden="true"></button>
@@ -1052,10 +1189,10 @@
               <button data-dir="right" aria-label="Move Right">▶</button>
 
               <button data-dir="sw" class="hidden" aria-hidden="true"></button>
-              <button data-dir="down" aria-label="Move Down">▼</button>
-              <button data-dir="se" class="hidden" aria-hidden="true"></button>
+              <button data-dir="down" aria-label="Move Down">▼</button> -->
+          <!-- <button data-dir="se" class="hidden" aria-hidden="true"></button>
             </div>
-          </div>
+          </div> -->
 
           <!-- Speed Controls -->
           <div class="speed-controls">
@@ -1073,10 +1210,10 @@
         </div>
       </div>
 
-      <footer>
+      <!-- <footer>
         🎮 Controls: Arrow keys, WASD, or touch D-pad • 🐛 Eat insects to grow •
         ⚠️ Avoid walls and yourself
-      </footer>
+      </footer> -->
     </div>
 
     <!-- Modal Backdrop -->
@@ -1113,7 +1250,7 @@
     <div class="modal" id="gameOver">
       <!-- <h2>💥 Game Over!</h2> -->
       <div class="modal-header">
-        <p id="goText">You hit the fence!</p>
+        <p id="goText">Ahh! You hit the wall</p>
         <button id="closeGameOver" class="close-modal-btn">&times;</button>
       </div>
       <div class="game-over-image">
@@ -1130,10 +1267,10 @@
           style="display: none"
         />
       </div>
-      <div
+      <!-- <div
         id="achievementText"
         style="margin: 16px 0; font-weight: 600; color: var(--accent)"
-      ></div>
+      ></div> -->
       <div class="modal-buttons">
         <button id="goMenu" class="btn-secondary">Back</button>
         <button id="goRestart" class="btn-primary">Play again</button>
@@ -1141,8 +1278,8 @@
     </div>
 
     <!-- Help Popup -->
-    <div class="help-popup-overlay" id="helpPopupOverlay"></div>
-    <div class="help-popup" id="helpPopup">
+    <!-- <div class="help-popup-overlay" id="helpPopupOverlay"></div> -->
+    <!-- <div class="help-popup" id="helpPopup">
       <div class="help-popup-header">
         <h2>How to Play</h2>
         <button id="closeHelpPopup">&times;</button>
@@ -1153,7 +1290,7 @@
           <span>Swipe Up</span>
         </div>
         <div class="swipe-direction">
-          <img src="images/snake-directions/downSnake.png" alt="Down" />
+          <img src="images/snake-directions/downSnake.png" alt="Down" class="rotate-down-snake" />
           <span>Swipe Down</span>
         </div>
         <div class="swipe-direction">
@@ -1165,7 +1302,7 @@
           <span>Swipe Right</span>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- Three.js -->
     <script src="https://unpkg.com/three@0.156.0/build/three.min.js"></script>
@@ -1214,20 +1351,32 @@
           .addEventListener("click", goMenuAction);
 
         // Help Popup
-        function showHelpPopup() {
+        window.showHelpPopup = function () {
+          wasPlayingBeforeHelp = playing; // Store current playing state
+          playing = false; // Pause the game
+          updatePauseButtonUI(); // Update pause button icon
           document.getElementById("helpPopupOverlay").classList.add("show");
           document.getElementById("helpPopup").classList.add("show");
+        };
+
+        function closeHelpPopupFunction() {
+          console.log("Closing help popup");
+          const helpPopupOverlay = document.getElementById("helpPopupOverlay");
+          const helpPopup = document.getElementById("helpPopup");
+
+          helpPopup.classList.remove("show");
+          helpPopupOverlay.classList.remove("show");
+
+          if (wasPlayingBeforeHelp) {
+            playing = true; // Resume the game if it was playing before
+            lastTime = performance.now(); // Reset lastTime to ensure smooth resumption
+          }
+          wasPlayingBeforeHelp = false; // Reset the flag
         }
 
-        document.getElementById("closeHelpPopup").addEventListener("click", () => {
-          document.getElementById("helpPopupOverlay").classList.remove("show");
-          document.getElementById("helpPopup").classList.remove("show");
-        });
-
-        document.getElementById("helpPopupOverlay").addEventListener("click", () => {
-          document.getElementById("helpPopupOverlay").classList.remove("show");
-          document.getElementById("helpPopup").classList.remove("show");
-        });
+        // document
+        //   .getElementById("helpPopupOverlay")
+        //   .addEventListener("click", closeHelpPopupFunction);
 
         // Scene setup
         const canvas = document.getElementById("glcanvas");
@@ -1240,7 +1389,7 @@
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        renderer.setClearColor(0x0a0e12);
+        renderer.setClearColor(0x000000, 0); // Transparent background
 
         const textureLoader = new THREE.TextureLoader();
         const insectTextures = [
@@ -1254,7 +1403,7 @@
 
         // Enhanced camera setup
         const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-        camera.position.set(0, 160, 25);
+        camera.position.set(0, 240, 0); // Adjusted Y-position to move arena upwards
         camera.lookAt(0, 0, 0);
 
         // Enhanced lighting
@@ -1279,7 +1428,7 @@
 
         // Enhanced ground with better texture
         function createEnhancedGround() {
-          const grassTexture = generateEnhancedGrassTexture(512, 512);
+          const grassTexture = generateEnhancedGrassTexture(850, 850);
           grassTexture.wrapS = grassTexture.wrapT = THREE.RepeatWrapping;
           grassTexture.repeat.set(
             gameDimensions.width / 25,
@@ -1431,6 +1580,7 @@
         const COLLISION_DELAY_MS = 800;
         let timerInterval = null;
         let elapsedTime = 0;
+        let wasPlayingBeforeHelp = false; // New variable to store game state before help popup
 
         // UI elements
         const scoreEl = document.getElementById("score");
@@ -1441,7 +1591,7 @@
         const gameOverOverlay = document.getElementById("gameOverOverlay");
         const modalBackdrop = document.getElementById("modalBackdrop");
         const goText = document.getElementById("goText");
-        const achievementText = document.getElementById("achievementText");
+        // const achievementText = document.getElementById("achievementText");
 
         highScoreEl.textContent = highScore;
 
@@ -1520,7 +1670,7 @@
             const shineMaterial = new THREE.MeshStandardMaterial({
               color: 0xffffff,
               emissive: 0xffffff,
-              emissiveIntensity: 0.5,
+              emissiveIntensity: 0.1,
             });
 
             const leftShine = new THREE.Mesh(shineGeometry, shineMaterial);
@@ -1575,13 +1725,13 @@
 
           const material = new THREE.SpriteMaterial({
             map: insectTexture,
-            transparent: true,
-            alphaTest: 0.5,
-            color: 0xffffff, // Ensure no tinting
+            transparent: false,
+            alphaTest: 1e-4,
+            // color: 0xffffff, // Ensure no tinting
             fog: false, // Ignore fog
           });
           const insect = new THREE.Sprite(material);
-          insect.scale.set(15, 15, 1); // Increased scale
+          insect.scale.set(20, 20, 5); // Increased scale
 
           const margin = 12;
           insect.position.set(
@@ -1695,7 +1845,7 @@
             head.y < BOUNDS.minZ ||
             head.y > BOUNDS.maxZ
           ) {
-            endGame("⚠️ Ahh! you hit the wall");
+            endGame("Ahh! you hit the wall");
             return;
           }
 
@@ -1707,7 +1857,7 @@
               Math.pow(head.x - segment.x, 2) + Math.pow(head.y - segment.y, 2)
             );
             if (distance < 6) {
-              endGame("🐍 You ran into your self");
+              endGame("Ahh! You ran into your self");
               return;
             }
           }
@@ -1719,9 +1869,9 @@
             clearInterval(timerInterval);
             timerInterval = null;
           }
-          const icon = reason.split(" ")[0];
-          const message = reason.split(" ").slice(1).join(" ");
-          goText.innerHTML = `<span class="go-icon">${icon}</span> ${message}`;
+          const message = reason;
+          const iconHTML = `<img src="images/warning (1).svg" class="go-icon-svg">`;
+          goText.innerHTML = `${iconHTML} <span>${message}</span>`;
 
           const imgHitWall = document.getElementById("gameOverHitWall");
           const imgSelf = document.getElementById("gameOverSelf");
@@ -1736,14 +1886,14 @@
           }
 
           // Achievement system
-          let achievement = "";
-          if (score >= 500) achievement = "🏆 Snake Master!";
-          else if (score >= 300) achievement = "🥇 Expert Player!";
-          else if (score >= 200) achievement = "🥈 Great Job!";
-          else if (score >= 100) achievement = "🥉 Good Effort!";
-          else if (score >= 50) achievement = "👍 Getting Better!";
+          // let achievement = "";
+          // if (score >= 500) achievement = "🏆 Snake Master!";
+          // else if (score >= 300) achievement = "🥇 Expert Player!";
+          // else if (score >= 200) achievement = "🥈 Great Job!";
+          // else if (score >= 100) achievement = "🥉 Good Effort!";
+          // else if (score >= 50) achievement = "👍 Getting Better!";
 
-          achievementText.textContent = achievement;
+          // achievementText.textContent = achievement;
 
           modalBackdrop.classList.add("show");
           gameOverOverlay.classList.add("show");
@@ -1973,6 +2123,16 @@
         });
 
         // UI event listeners
+        function updatePauseButtonUI() {
+          const pauseBtn = document.getElementById("pauseBtn");
+          if (playing) {
+            pauseBtn.innerHTML = '<img src="/images/pause.svg" alt="Pause" />';
+          } else {
+            pauseBtn.innerHTML =
+              '<svg width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.66667 1.33333V18.6667L14.6667 10L2.66667 1.33333Z" fill="white"/></svg>';
+          }
+        }
+
         function togglePause() {
           if (!gameStarted) return;
           playing = !playing;
@@ -2064,7 +2224,7 @@
           const header = document.querySelector("header");
           if (window.innerWidth <= 480) {
             header.style.flexDirection = "column";
-            header.style.alignItems = "flex-start";
+            header.style.alignItems = "center";
             header.style.gap = "8px";
           } else {
             header.style.flexDirection = "row";
@@ -2116,9 +2276,9 @@
 
           // Create gradient base
           const gradient = ctx.createLinearGradient(0, 0, 0, height);
-          gradient.addColorStop(0, "#25e610");
-          gradient.addColorStop(0.5, "#25e610");
-          gradient.addColorStop(1, "#25e610");
+          gradient.addColorStop(0, "#25e605");
+          gradient.addColorStop(0.5, "#25e605");
+          gradient.addColorStop(1, "#25e605");
 
           ctx.fillStyle = gradient;
           ctx.fillRect(0, 0, width, height);
@@ -2171,29 +2331,51 @@
         helpPopup.id = "helpPopup";
 
         helpPopup.innerHTML = `
-    <div class="help-popup-header">
-        <h2>Swipe Gestures</h2>
-        <button id="closeHelpPopup">&times;</button>
+  <div class="help-popup-header">
+    <h2>Swipe Gestures</h2>
+    <button id="closeHelpPopup">&times;</button>
+  </div>
+  <div class="swipe-grid">
+    <div class="swipe-direction">
+      <div class="swipe-header">
+        <div class="swipe-icon-circle">
+          <img src="/images/snake-directions/swipe_up.svg" alt="Swipe Up Icon" class="swipe-icon">
+        </div>
+        <span>Swipe Up</span>
+      </div>
+      <img src="/images/snake-directions/upSnake.png" alt="Swipe Up Snake" class="snake-img">
     </div>
-    <div class="swipe-grid">
-        <div class="swipe-direction">
-            <img src="/images/upSnake.png" alt="Swipe Up">
-            <span>Swipe Up</span>
+
+    <div class="swipe-direction">
+      <div class="swipe-header">
+        <div class="swipe-icon-circle">
+          <img src="/images/snake-directions/swipe_down.svg" alt="Swipe Down Icon" class="swipe-icon">
         </div>
-        <div class="swipe-direction">
-            <img src="/images/downSnake.png" alt="Swipe Down">
-            <span>Swipe Down</span>
-        </div>
-        <div class="swipe-direction">
-            <img src="/images/leftSnake.png" alt="Swipe Left">
-            <span>Swipe Left</span>
-        </div>
-        <div class="swipe-direction">
-          
-            <img src="/images/rightSnake.png" alt="Swipe Right">
-            <span>Swipe Right</span>
-        </div>
+        <span>Swipe Down</span>
+      </div>
+      <img src="/images/snake-directions/downSnake.png" alt="Swipe Down Snake" class="snake-img snake-down">
     </div>
+
+    <div class="swipe-direction">
+      <div class="swipe-header">
+        <div class="swipe-icon-circle">
+          <img src="/images/snake-directions/swipe_left.svg" alt="Swipe Left Icon" class="swipe-icon">
+        </div>
+        <span>Swipe Left</span>
+      </div>
+      <img src="/images/snake-directions/leftSnake.png" alt="Swipe Left Snake" class="snake-img">
+    </div>
+
+    <div class="swipe-direction">
+      <div class="swipe-header">
+        <div class="swipe-icon-circle">
+          <img src="/images/snake-directions/swipe_right.svg" alt="Swipe Right Icon" class="swipe-icon">
+        </div>
+        <span>Swipe Right</span>
+      </div>
+      <img src="/images/snake-directions/rightSnake.png" alt="Swipe Right Snake" class="snake-img">
+    </div>
+  </div>
 `;
 
         // Add elements to DOM
@@ -2207,6 +2389,7 @@
         }
 
         function hideHelpPopup() {
+          console.log("Closing help popup");
           helpPopup.classList.remove("show");
           helpPopupOverlay.classList.remove("show");
         }
@@ -2218,8 +2401,13 @@
         document
           .getElementById("closeHelpPopup")
           .addEventListener("click", hideHelpPopup);
-        helpPopupOverlay.addEventListener("click", hideHelpPopup);
-
+        // helpPopupOverlay.addEventListener("click", hideHelpPopup);
+        // document
+        //         .getElementById("closeHelpPopup")
+        //         .addEventListener("click", () => {
+        //           console.log("closeHelpPopup button clicked!");
+        //           closeHelpPopupFunction();
+        //         });
         // Initialize
         modalBackdrop.classList.add("show");
         onWindowResize();
@@ -2255,6 +2443,41 @@
           }
         });
       })();
+      // Preload help popup images
+      function preloadHelpImages() {
+        const imageUrls = [
+          "images/snake-directions/upSnake.png",
+          "images/snake-directions/downSnake.png",
+          "images/snake-directions/leftSnake.png",
+          "images/snake-directions/rightSnake.png",
+        ];
+
+        imageUrls.forEach((url) => {
+          const img = new Image();
+          img.src = url;
+        });
+      }
+      // Add gradient background to scene
+      const gradientTexture = createGradientTexture();
+      scene.background = gradientTexture;
+
+      function createGradientTexture() {
+        const canvas = document.createElement("canvas");
+        canvas.width = 256;
+        canvas.height = 256;
+        const context = canvas.getContext("2d");
+
+        const gradient = context.createLinearGradient(0, 0, 0, 256);
+        gradient.addColorStop(0, "#364556");
+        gradient.addColorStop(1, "#252750");
+
+        context.fillStyle = gradient;
+        context.fillRect(0, 0, 256, 256);
+
+        return new THREE.CanvasTexture(canvas);
+      }
+
+      document.addEventListener("DOMContentLoaded", preloadHelpImages);
     </script>
   </body>
 </html>
