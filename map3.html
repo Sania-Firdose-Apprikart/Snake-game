@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Responsive Interactive India Map</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      text-align: center;
+    }
+    .color-palette {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .color-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 5px;
+      cursor: grab;
+      border: 2px solid #333;
+    }
+    .svg-container {
+      max-width: 90vw;
+      margin: 0 auto;
+      border: 1px solid #ddd;
+    }
+    svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    path {
+      stroke: #333;
+      stroke-width: 1;
+      cursor: pointer;
+      transition: fill 0.3s;
+    }
+    path:hover {
+      stroke: #ff4081;
+      stroke-width: 2;
+    }
+    .tooltip {
+      position: absolute;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      pointer-events: none;
+      font-size: 14px;
+      display: none;
+      white-space: nowrap;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+
+<h1>India Map: Drag Color to States</h1>
+
+<div class="color-palette" aria-label="Color palette">
+  <div class="color-btn" draggable="true" style="background-color: #ff0000;" data-color="#ff0000" title="Red"></div>
+  <div class="color-btn" draggable="true" style="background-color: #00ff00;" data-color="#00ff00" title="Green"></div>
+  <div class="color-btn" draggable="true" style="background-color: #0000ff;" data-color="#0000ff" title="Blue"></div>
+  <div class="color-btn" draggable="true" style="background-color: #ffff00;" data-color="#ffff00" title="Yellow"></div>
+  <div class="color-btn" draggable="true" style="background-color: #ff00ff;" data-color="#ff00ff" title="Magenta"></div>
+</div>
+
+<div class="svg-container">
+  <svg viewBox="0 0 1000 800" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="India Map">
+    <!-- Example simplified state paths: Replace these with your actual state SVG paths -->
+    <path id="KA" d="M300,600 L350,620 L370,550 L340,510 Z" fill="#ccc" aria-label="Karnataka"></path>
+    <path id="MH" d="M400,550 L460,580 L470,520 L420,480 Z" fill="#ccc" aria-label="Maharashtra"></path>
+    <path id="DL" d="M550,450 L590,470 L570,430 Z" fill="#ccc" aria-label="Delhi"></path>
+    <path id="RJ" d="M350,480 L410,510 L400,460 L360,430 Z" fill="#ccc" aria-label="Rajasthan"></path>
+    <!-- Add more states as needed -->
+  </svg>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+  let draggedColor = null;
+
+  // Handle drag start on color buttons
+  document.querySelectorAll('.color-btn').forEach(btn => {
+    btn.addEventListener('dragstart', e => {
+      draggedColor = e.target.dataset.color;
+    });
+  });
+
+  // Allow drop on paths and fill with color
+  document.querySelectorAll('svg path').forEach(path => {
+    path.addEventListener('dragover', e => {
+      e.preventDefault();
+      path.style.stroke = '#ff4081'; // highlight on dragover
+      path.style.strokeWidth = '2';
+    });
+    path.addEventListener('dragleave', e => {
+      path.style.stroke = '#333'; // reset stroke
+      path.style.strokeWidth = '1';
+    });
+    path.addEventListener('drop', e => {
+      e.preventDefault();
+      path.style.stroke = '#333';
+      path.style.strokeWidth = '1';
+      if(draggedColor) {
+        path.style.fill = draggedColor;
+      }
+    });
+
+    // Tooltip handling
+    path.addEventListener('mousemove', e => {
+      const tooltip = document.getElementById('tooltip');
+      tooltip.style.display = 'block';
+      tooltip.textContent = path.getAttribute('aria-label');
+      tooltip.style.left = e.pageX + 10 + 'px';
+      tooltip.style.top = e.pageY + 10 + 'px';
+    });
+    path.addEventListener('mouseleave', e => {
+      document.getElementById('tooltip').style.display = 'none';
+    });
+  });
+</script>
+
+</body>
+</html>

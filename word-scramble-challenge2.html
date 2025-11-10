@@ -116,11 +116,14 @@
         padding: 0 20px;
       }
       .drop-zone {
-        display: flex;
+        display: inline-flex; /* Use inline-flex to allow centering */
         justify-content: center;
         gap: 10px;
         margin-bottom: 40px;
-        height: calc(var(--cube-size) + 10px);
+        height: calc(var(--cube-size) + 20px);
+        overflow-x: auto;
+        padding: 5px;
+        max-width: 100%; /* Ensure it respects the parent's width */
       }
       .drop-slot {
         width: var(--cube-size);
@@ -129,6 +132,7 @@
         border-radius: 10px;
         border: 2px dashed var(--primary-color);
         transition: background-color 0.3s;
+        flex-shrink: 0; /* Prevent slots from shrinking */
       }
       .drop-slot.drag-over {
         background-color: #d8eaff;
@@ -223,6 +227,46 @@
         padding: 5px;
         line-height: 1;
       }
+
+      /* Responsive adjustments for mobile devices */
+      @media (max-width: 600px) {
+        :root {
+          --cube-size: 45px; /* Smaller cubes on mobile */
+        }
+        .game-header h1 {
+          font-size: 1.8rem;
+        }
+        .stats-container {
+          font-size: 1.1rem;
+          padding: 0 10px;
+          margin-bottom: 20px;
+        }
+        .letter-cube {
+          font-size: 1.5rem;
+        }
+        .drop-zone, .source-zone {
+          gap: 5px; /* Tighter gap */
+        }
+        .modal-content {
+          padding: 20px;
+          width: 90%;
+        }
+      }
+
+      @media (max-width: 400px) {
+        :root {
+          --cube-size: 35px; /* Even smaller for very small screens */
+        }
+        .game-header h1 {
+          font-size: 1.5rem;
+        }
+        .stats-container {
+          font-size: 1rem;
+        }
+        .letter-cube {
+          font-size: 1.2rem;
+        }
+      }
     </style>
   </head>
   <body>
@@ -266,13 +310,14 @@
     </div>
 
     <script>
-      // Use a set to track used words and fetch random words from an API
+      // Game state and constants
       let usedWords = new Set();
       let currentWord = "";
       let score = 0;
       let timer;
       let timeLeft = 30;
 
+      // DOM Elements
       const dropZone = document.getElementById("drop-zone");
       const sourceZone = document.getElementById("source-zone");
       const checkBtn = document.getElementById("check-btn");
@@ -285,8 +330,11 @@
       const gameContainer = document.querySelector(".game-container");
       const restartBtn = document.getElementById("restart-btn");
 
+      // Drag-and-drop state
       let draggedCube = null;
+      let lastTouchTarget = null;
 
+      // Game Setup
       function startGame() {
         startModal.style.display = "none";
         gameContainer.classList.remove("blur-bg");
@@ -296,7 +344,7 @@
         newGame();
       }
 
-       function restartGame() {
+      function restartGame() {
         score = 0;
         usedWords.clear();
         scoreEl.textContent = `Score: ${score}`;
@@ -312,34 +360,12 @@
         checkBtn.classList.remove("hidden");
         nextBtn.classList.add("hidden");
 
-        // Fetch a random word from the API, retry if already used
-        let word = "";
-        let tries = 0;
-        while (!word || usedWords.has(word)) {
-            tries++;
-            if (tries > 10) { // Avoid infinite loop and use fallback
-                const fallback = ["planet", "galaxy", "comet", "space", "earth", "mars", "lunar", "solar"];
-                const availableFallbacks = fallback.filter(w => !usedWords.has(w));
-                word = availableFallbacks.length > 0 ? availableFallbacks[Math.floor(Math.random() * availableFallbacks.length)] : "space";
-                break;
-            }
-            try {
-                const wordLength = Math.floor(Math.random() * 4) + 5; // 5 to 8 letters
-                const res = await fetch(
-                `https://random-word-api.herokuapp.com/word?length=${wordLength}`
-                );
-                if (!res.ok) throw new Error('API request failed');
-                const data = await res.json();
-                word = data[0].toLowerCase();
-            } catch(e) {
-                console.error("API fetch failed, trying again.", e);
-                word = ""; // reset word to retry loop
-            }
-        }
+        let word = await fetchWord();
         usedWords.add(word);
         currentWord = word;
         const scrambled = currentWord.split("").sort(() => 0.5 - Math.random());
 
+        // Create drop slots
         for (let i = 0; i < currentWord.length; i++) {
           const slot = document.createElement("div");
           slot.classList.add("drop-slot");
@@ -347,6 +373,7 @@
           dropZone.appendChild(slot);
         }
 
+        // Create letter cubes
         scrambled.forEach((letter) => {
           const cube = document.createElement("div");
           cube.classList.add("letter-cube");
@@ -359,13 +386,43 @@
         startTimer();
       }
 
+      async function fetchWord() {
+        let word = "";
+        let tries = 0;
+        while (!word || usedWords.has(word)) {
+          tries++;
+          if (tries > 10) {
+            const fallback = ["planet", "galaxy", "comet", "space", "earth", "mars", "lunar", "solar"];
+            const available = fallback.filter(w => !usedWords.has(w));
+            return available.length > 0 ? available[Math.floor(Math.random() * available.length)] : "space";
+          }
+          try {
+            const len = Math.floor(Math.random() * 4) + 5;
+            const res = await fetch(`https://random-word-api.herokuapp.com/word?length=${len}`);
+            if (!res.ok) throw new Error('API request failed');
+            const data = await res.json();
+            word = data[0].toLowerCase();
+          } catch (e) {
+            console.error("API fetch failed, retrying.", e);
+            word = "";
+          }
+        }
+        return word;
+      }
+
+      // Event Listeners
       function addDragListeners() {
         const cubes = document.querySelectorAll(".letter-cube");
         const slots = document.querySelectorAll(".drop-slot");
 
         cubes.forEach((cube) => {
+          // Mouse Events
           cube.addEventListener("dragstart", dragStart);
           cube.addEventListener("dragend", dragEnd);
+          // Touch Events for mobile responsiveness
+          cube.addEventListener("touchstart", touchStart, { passive: false });
+          cube.addEventListener("touchmove", touchMove, { passive: false });
+          cube.addEventListener("touchend", touchEnd);
         });
 
         slots.forEach((slot) => {
@@ -375,15 +432,13 @@
           slot.addEventListener("drop", dragDrop);
         });
 
-        // Also allow dropping back into the source zone
         sourceZone.addEventListener("dragover", dragOver);
         sourceZone.addEventListener("drop", (e) => {
-          if (draggedCube) {
-            sourceZone.appendChild(draggedCube);
-          }
+          if (draggedCube) sourceZone.appendChild(draggedCube);
         });
       }
 
+      // Mouse Drag Handlers
       function dragStart(e) {
         draggedCube = e.target;
         setTimeout(() => e.target.classList.add("dragging"), 0);
@@ -394,6 +449,7 @@
         draggedCube = null;
       }
 
+      // Common Drag Handlers (for mouse)
       function dragOver(e) {
         e.preventDefault();
       }
@@ -413,47 +469,87 @@
 
       function dragDrop(e) {
         e.preventDefault();
-        if (e.target.classList.contains("drop-slot")) {
-          e.target.classList.remove("drag-over");
-          // If slot already has a cube, swap them
-          if (e.target.children.length > 0) {
-            const existingCube = e.target.children[0];
-            sourceZone.appendChild(existingCube);
-          }
-          e.target.appendChild(draggedCube);
+        const target = e.target;
+        if (target.classList.contains("drop-slot")) {
+          performDrop(target);
         }
       }
 
+      // Touch Drag Handlers
+      function touchStart(e) {
+        e.preventDefault();
+        draggedCube = e.target;
+        draggedCube.classList.add("dragging");
+      }
+
+      function touchMove(e) {
+        e.preventDefault();
+        if (!draggedCube) return;
+
+        const touch = e.touches[0];
+        // Find the element under the finger
+        const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+
+        // Manage highlighting of drop zones
+        if (lastTouchTarget && lastTouchTarget !== elementUnder) {
+            lastTouchTarget.classList.remove("drag-over");
+        }
+
+        if (elementUnder && elementUnder.classList.contains("drop-slot")) {
+            elementUnder.classList.add("drag-over");
+            lastTouchTarget = elementUnder;
+        } else {
+            lastTouchTarget = null;
+        }
+      }
+
+      function touchEnd(e) {
+        if (!draggedCube) return;
+        
+        // If the touch ends over a valid drop target, perform the drop
+        if (lastTouchTarget) {
+            performDrop(lastTouchTarget);
+        } else {
+            // Otherwise, return the cube to the source zone
+            sourceZone.appendChild(draggedCube);
+        }
+
+        // Cleanup
+        draggedCube.classList.remove("dragging");
+        draggedCube = null;
+        if(lastTouchTarget) lastTouchTarget.classList.remove("drag-over");
+        lastTouchTarget = null;
+      }
+
+      // Core Drop Logic (used by both mouse and touch)
+      function performDrop(targetSlot) {
+        // If the slot already has a cube, swap it back to the source zone
+        if (targetSlot.children.length > 0) {
+          const existingCube = targetSlot.children[0];
+          sourceZone.appendChild(existingCube);
+        }
+        targetSlot.appendChild(draggedCube);
+      }
+
+      // Game Logic
       function checkGuess(showAnswer = false) {
         clearInterval(timer);
         let guess = "";
-        const slots = dropZone.querySelectorAll(".drop-slot");
-        slots.forEach((slot) => {
-          if (slot.children.length > 0) {
-            guess += slot.children[0].textContent;
-          }
+        dropZone.querySelectorAll(".drop-slot").forEach((slot) => {
+          if (slot.children.length > 0) guess += slot.children[0].textContent;
         });
 
         const isCorrect = guess === currentWord;
-        slots.forEach((slot, index) => {
-          if (slot.children.length > 0) {
-            const cube = slot.children[0];
-            if (isCorrect) {
-              cube.classList.add("correct");
-            } else {
-              cube.classList.add("incorrect");
-            }
-          }
+        dropZone.querySelectorAll(".letter-cube").forEach((cube) => {
+          cube.classList.add(isCorrect ? "correct" : "incorrect");
         });
 
         if (isCorrect) {
           score++;
           scoreEl.textContent = `Score: ${score}`;
           messageEl.textContent = "Correct! Excellent!";
-        } else if (showAnswer) {
-          messageEl.textContent = `Time's Up! The correct word was: ${currentWord}`;
         } else {
-          messageEl.textContent = `Not quite! The correct word was: ${currentWord}`;
+          messageEl.textContent = `The word was: ${currentWord}`;
         }
 
         checkBtn.classList.add("hidden");
@@ -467,16 +563,16 @@
           timerEl.textContent = `Time: ${timeLeft}s`;
           if (timeLeft === 0) {
             clearInterval(timer);
-            checkGuess(true); // Show answer when time is up
+            checkGuess(true);
           }
         }, 1000);
       }
 
-      checkBtn.addEventListener("click", checkGuess);
+      // Button Event Listeners
+      checkBtn.addEventListener("click", () => checkGuess(false));
       nextBtn.addEventListener("click", newGame);
       modalStartBtn.addEventListener("click", startGame);
       restartBtn.addEventListener("click", restartGame);
-
     </script>
   </body>
 </html>

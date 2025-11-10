@@ -40,20 +40,34 @@
       }
       .video-container {
         width: 100%;
-        max-width: 400px;
-        margin: 16px auto;
-        border-radius: 16px;
+        max-width: 300px;
+        margin: 0 auto 20px;
+        border-radius: 20px;
         overflow: hidden;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        border: 2px solid rgba(255, 255, 255, 0.1);
-        background: #000;
+        position: relative;
       }
 
       .video-container video {
         width: 100%;
         height: auto;
         display: block;
-        border-radius: 14px;
+      }
+
+      #unmute-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 0;
+        min-width: 40px;
       }
 
       /* Responsive video sizing */
@@ -1149,10 +1163,16 @@
 
           </div> -->
           <button id="pauseBtn" class="btn">
-            <img src="/images/pause.svg" alt="" />
+            <img
+              src="https://res.cloudinary.com/dtct6qef2/image/upload/v1761288636/pause_tz3mta.svg"
+              alt=""
+            />
           </button>
           <button id="restartBtn" class="btn">
-            <img src="/images/autorenew.svg" alt="" />
+            <img
+              src="https://res.cloudinary.com/dtct6qef2/image/upload/v1761288633/autorenew_q7rlmx.svg"
+              alt=""
+            />
           </button>
           <div class="timer-panel">
             <div id="timer" class="value">00:00</div>
@@ -1168,7 +1188,10 @@
             class="performance-indicator"
             onclick="showHelpPopup()"
           >
-            <img src="images/info.svg" alt="Help" />
+            <img
+              src="https://res.cloudinary.com/dtct6qef2/image/upload/v1761288635/info_fsku1j.svg"
+              alt="Help"
+            />
           </div>
           <!-- Game Over Overlay -->
           <div class="game-over-overlay" id="gameOverOverlay"></div>
@@ -1230,12 +1253,19 @@
           loop
           muted
           playsinline
-          poster="/images/snakeThumbnail.png"
+          poster="https://res.cloudinary.com/dtct6qef2/image/upload/v1761288634/snakeThumbnail_d1tnja.png"
         >
-          <source src="/assets/videos/snakeVideo.mp4" type="video/mp4" />
-          <source src="/assets/videos/snakeVideo.webm" type="video/webm" />
+          <source
+            src="https://res.cloudinary.com/dtct6qef2/video/upload/v1761288811/snakeVideo_xdhent.mp4"
+            type="video/mp4"
+          />
+          <source
+            src="https://res.cloudinary.com/dtct6qef2/video/upload/v1761288811/snakeVideo_xdhent.webm"
+            type="video/webm"
+          />
           Your browser doesn't support video playback.
         </video>
+        <button id="unmute-btn">🔇</button>
       </div>
       <!-- <p style="color: black">
         Guide your snake to eat colorful insects and grow longer!<br />
@@ -1256,13 +1286,13 @@
       <div class="game-over-image">
         <img
           id="gameOverHitWall"
-          src="images/hit-the-fence.png"
+          src="https://res.cloudinary.com/dtct6qef2/image/upload/v1761288635/hit-the-fence_nhoxcb.png"
           alt="Snake hitting a wall"
           style="display: none"
         />
         <img
           id="gameOverSelf"
-          src="images/ran-into-yourself.png"
+          src="https://res.cloudinary.com/dtct6qef2/image/upload/v1761288637/ran-into-yourself_ht1kp4.png"
           alt="Snake ran into itself"
           style="display: none"
         />
@@ -1309,8 +1339,18 @@
 
     <script>
       (() => {
-        // Add this near your other event listeners
+        const unmuteBtn = document.getElementById("unmute-btn");
         const introVideo = document.getElementById("introVideo");
+
+        unmuteBtn.addEventListener("click", () => {
+          if (introVideo.muted) {
+            introVideo.muted = false;
+            unmuteBtn.textContent = "🔊";
+          } else {
+            introVideo.muted = true;
+            unmuteBtn.textContent = "🔇";
+          }
+        });
 
         document.getElementById("startBtn").addEventListener("click", () => {
           // Pause and reset video when starting game
@@ -1393,9 +1433,15 @@
 
         const textureLoader = new THREE.TextureLoader();
         const insectTextures = [
-          textureLoader.load("images/frog.png"),
-          textureLoader.load("images/red-insect.png"),
-          textureLoader.load("images/yellow-insect.png"),
+          textureLoader.load(
+            "https://res.cloudinary.com/dtct6qef2/image/upload/v1761288634/frog_fstktw.png"
+          ),
+          textureLoader.load(
+            "https://res.cloudinary.com/dtct6qef2/image/upload/v1761288636/red-insect_ccpc1f.png"
+          ),
+          textureLoader.load(
+            "https://res.cloudinary.com/dtct6qef2/image/upload/v1761288634/yellow-insect_opjwb3.png"
+          ),
         ];
 
         const scene = new THREE.Scene();
@@ -1870,7 +1916,7 @@
             timerInterval = null;
           }
           const message = reason;
-          const iconHTML = `<img src="images/warning (1).svg" class="go-icon-svg">`;
+          const iconHTML = `<img src="https://res.cloudinary.com/dtct6qef2/image/upload/v1761288633/warning_1_hez53j.svg" class="go-icon-svg">`;
           goText.innerHTML = `${iconHTML} <span>${message}</span>`;
 
           const imgHitWall = document.getElementById("gameOverHitWall");
@@ -1913,7 +1959,7 @@
 
           // Reset pause button icon
           document.getElementById("pauseBtn").innerHTML =
-            '<img src="/images/pause.svg" alt="Pause" />';
+            '<img src="https://res.cloudinary.com/dtct6qef2/image/upload/v1761288636/pause_tz3mta.svg" alt="Pause" />';
 
           // Hide modals
           gameOverModal.classList.remove("show");
@@ -2126,7 +2172,8 @@
         function updatePauseButtonUI() {
           const pauseBtn = document.getElementById("pauseBtn");
           if (playing) {
-            pauseBtn.innerHTML = '<img src="/images/pause.svg" alt="Pause" />';
+            pauseBtn.innerHTML =
+              '<img src="https://res.cloudinary.com/dtct6qef2/image/upload/v1761288636/pause_tz3mta.svg" alt="Pause" />';
           } else {
             pauseBtn.innerHTML =
               '<svg width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.66667 1.33333V18.6667L14.6667 10L2.66667 1.33333Z" fill="white"/></svg>';
@@ -2139,7 +2186,8 @@
           const pauseBtn = document.getElementById("pauseBtn");
           if (playing) {
             lastTime = performance.now();
-            pauseBtn.innerHTML = '<img src="/images/pause.svg" alt="Pause" />';
+            pauseBtn.innerHTML =
+              '<img src="https://res.cloudinary.com/dtct6qef2/image/upload/v1761288636/pause_tz3mta.svg" alt="Pause" />';
           } else {
             pauseBtn.innerHTML =
               '<svg width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.66667 1.33333V18.6667L14.6667 10L2.66667 1.33333Z" fill="white"/></svg>';
@@ -2339,41 +2387,41 @@
     <div class="swipe-direction">
       <div class="swipe-header">
         <div class="swipe-icon-circle">
-          <img src="/images/snake-directions/swipe_up.svg" alt="Swipe Up Icon" class="swipe-icon">
+          <img src="https://res.cloudinary.com/dtct6qef2/image/upload/v1761291268/swipe_right_yybjoy.svg" alt="Swipe Up Icon" class="swipe-icon">
         </div>
         <span>Swipe Up</span>
       </div>
-      <img src="/images/snake-directions/upSnake.png" alt="Swipe Up Snake" class="snake-img">
+      <img src="https://res.cloudinary.com/dtct6qef2/image/upload/v1761291270/upSnake_tjxz5p.png" alt="Swipe Up Snake" class="snake-img">
     </div>
 
     <div class="swipe-direction">
       <div class="swipe-header">
         <div class="swipe-icon-circle">
-          <img src="/images/snake-directions/swipe_down.svg" alt="Swipe Down Icon" class="swipe-icon">
+          <img src="https://res.cloudinary.com/dtct6qef2/image/upload/v1761291264/swipe_down_ccrc42.svg" alt="Swipe Down Icon" class="swipe-icon">
         </div>
         <span>Swipe Down</span>
       </div>
-      <img src="/images/snake-directions/downSnake.png" alt="Swipe Down Snake" class="snake-img snake-down">
+      <img src="https://res.cloudinary.com/dtct6qef2/image/upload/v1761291262/downSnake_dnya27.png" alt="Swipe Down Snake" class="snake-img snake-down">
     </div>
 
     <div class="swipe-direction">
       <div class="swipe-header">
         <div class="swipe-icon-circle">
-          <img src="/images/snake-directions/swipe_left.svg" alt="Swipe Left Icon" class="swipe-icon">
+          <img src="https://res.cloudinary.com/dtct6qef2/image/upload/v1761291268/swipe_left_m4yqwc.svg" alt="Swipe Left Icon" class="swipe-icon">
         </div>
         <span>Swipe Left</span>
       </div>
-      <img src="/images/snake-directions/leftSnake.png" alt="Swipe Left Snake" class="snake-img">
+      <img src="https://res.cloudinary.com/dtct6qef2/image/upload/v1761291263/leftSnake_wxlc45.png" alt="Swipe Left Snake" class="snake-img">
     </div>
 
     <div class="swipe-direction">
       <div class="swipe-header">
         <div class="swipe-icon-circle">
-          <img src="/images/snake-directions/swipe_right.svg" alt="Swipe Right Icon" class="swipe-icon">
+          <img src="https://res.cloudinary.com/dtct6qef2/image/upload/v1761291268/swipe_right_yybjoy.svg" alt="Swipe Right Icon" class="swipe-icon">
         </div>
         <span>Swipe Right</span>
       </div>
-      <img src="/images/snake-directions/rightSnake.png" alt="Swipe Right Snake" class="snake-img">
+      <img src="https://res.cloudinary.com/dtct6qef2/image/upload/v1761291262/rightSnake_d0rfbd.png" alt="Swipe Right Snake" class="snake-img">
     </div>
   </div>
 `;
@@ -2446,10 +2494,10 @@
       // Preload help popup images
       function preloadHelpImages() {
         const imageUrls = [
-          "images/snake-directions/upSnake.png",
-          "images/snake-directions/downSnake.png",
-          "images/snake-directions/leftSnake.png",
-          "images/snake-directions/rightSnake.png",
+          "https://res.cloudinary.com/dtct6qef2/image/upload/v1761291270/upSnake_tjxz5p.png",
+          "https://res.cloudinary.com/dtct6qef2/image/upload/v1761291262/downSnake_dnya27.png",
+          "https://res.cloudinary.com/dtct6qef2/image/upload/v1761291263/leftSnake_wxlc45.png",
+          "https://res.cloudinary.com/dtct6qef2/image/upload/v1761291262/rightSnake_d0rfbd.png",
         ];
 
         imageUrls.forEach((url) => {
